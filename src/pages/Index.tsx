@@ -4,12 +4,18 @@ import GameSetup from "@/components/GameSetup";
 import NightPhase from "@/components/NightPhase";
 import DayPhase from "@/components/DayPhase";
 import GameResult from "@/components/GameResult";
+import PlayerRoleSelection from "@/components/PlayerRoleSelection";
 import { useGame } from "@/contexts/GameContext";
 import { MoonStar, Sun } from "lucide-react";
 
 // Component to render the current game phase
 const GamePhaseRenderer = () => {
   const { gameState } = useGame();
+  
+  // Check if we're in role selection mode
+  if (gameState.roleSelectionActive) {
+    return <PlayerRoleSelection />;
+  }
   
   switch (gameState.gamePhase) {
     case 'setup':

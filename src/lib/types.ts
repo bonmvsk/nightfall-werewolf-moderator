@@ -50,6 +50,7 @@ export interface GameState {
   nightTimerActive: boolean;
   eliminatedLastNight: string[];
   winner: 'villagers' | 'werewolves' | null;
+  roleSelectionActive?: boolean;
 }
 
 // Timer settings
