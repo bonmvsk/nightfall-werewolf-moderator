@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import PlayerCard from "./PlayerCard";
 import GameTimer from "./GameTimer";
 import { ROLES, getNightActionOrder } from "@/lib/game-data";
-import { Moon, ArrowRight, Users, CheckCircle, XCircle, Sun, VolumeX } from "lucide-react";
+import { Moon, ArrowRight, Users, CheckCircle, XCircle, Sun } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Player } from "@/lib/types";
 
@@ -83,7 +82,6 @@ const NightPhase = () => {
     
     switch (currentRole) {
       case 'werewolf':
-      case 'wolf-cub':
         actionType = 'kill';
         break;
       case 'doctor':
@@ -94,9 +92,6 @@ const NightPhase = () => {
         break;
       case 'witch':
         actionType = 'poison';
-        break;
-      case 'spellcaster':
-        actionType = 'silence';
         break;
       case 'seer':
         actionType = 'view';
@@ -247,14 +242,14 @@ const NightPhase = () => {
                   <div className="flex flex-col items-center">
                     <CheckCircle className="h-12 w-12 text-green-500 mb-2" />
                     <p className="text-center">
-                      <span className="font-bold">{seerResult.playerName}</span> is <span className="text-green-500 font-bold">คนดี</span> (Village Team)
+                      <span className="font-bold">{seerResult.playerName}</span> is <span className="text-green-500 font-bold">Good</span> (Village Team)
                     </p>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center">
                     <XCircle className="h-12 w-12 text-red-500 mb-2" />
                     <p className="text-center">
-                      <span className="font-bold">{seerResult.playerName}</span> is <span className="text-red-500 font-bold">คนไม่ดี</span> (Werewolf Team)
+                      <span className="font-bold">{seerResult.playerName}</span> is <span className="text-red-500 font-bold">Bad</span> (Werewolf Team)
                     </p>
                   </div>
                 )}
@@ -340,10 +335,10 @@ const NightPhase = () => {
           {playerRoleDialog.player?.role && (
             <div className="flex flex-col items-center">
               <div className={`w-24 h-24 rounded-full mb-4 flex items-center justify-center
-                ${ROLES[playerRoleDialog.player.role].team === 'werewolves' ? 'bg-werewolf/20' : 'bg-blue-900/20'}`}>
+                ${playerRoleDialog.player.role === 'werewolf' ? 'bg-werewolf/20' : 'bg-blue-900/20'}`}>
                 <div className={`w-16 h-16 rounded-full
-                  ${ROLES[playerRoleDialog.player.role].team === 'werewolves' ? 'bg-werewolf/50' : 'bg-blue-900/50'}`}>
-                  {ROLES[playerRoleDialog.player.role].team === 'werewolves' && (
+                  ${playerRoleDialog.player.role === 'werewolf' ? 'bg-werewolf/50' : 'bg-blue-900/50'}`}>
+                  {playerRoleDialog.player.role === 'werewolf' && (
                     <div className="wolf-eye top-4 left-4"></div>
                   )}
                 </div>
@@ -357,7 +352,7 @@ const NightPhase = () => {
               </p>
               
               <div className={`inline-block px-3 py-1 rounded-full text-sm
-                ${ROLES[playerRoleDialog.player.role].team === 'werewolves' ? 'bg-werewolf/30 text-red-300' : 'bg-blue-900/30 text-blue-300'}`}>
+                ${playerRoleDialog.player.role === 'werewolf' ? 'bg-werewolf/30 text-red-300' : 'bg-blue-900/30 text-blue-300'}`}>
                 Team: {ROLES[playerRoleDialog.player.role].team === 'werewolves' ? 'Werewolves' : 'Village'}
               </div>
               
