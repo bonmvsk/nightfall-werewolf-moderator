@@ -6,13 +6,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import PlayerCard from "./PlayerCard";
 import GameTimer from "./GameTimer";
 import { ROLES, getNightActionOrder } from "@/lib/game-data";
-import { Moon, ArrowRight } from "lucide-react";
+import { Moon, ArrowRight, Users } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Player } from "@/lib/types";
 
 const NightPhase = () => {
   const { gameState, performNightAction, completeNightPhase, startTimer, stopTimer } = useGame();
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
   const [activeRoles, setActiveRoles] = useState<string[]>([]);
   const [currentRoleIndex, setCurrentRoleIndex] = useState(0);
+  const [showAllPlayersDialog, setShowAllPlayersDialog] = useState(false);
+  const [playerRoleDialog, setPlayerRoleDialog] = useState<{open: boolean, player: Player | null}>({
+    open: false,
+    player: null
+  });
   
   // Find players with the current night role
   const currentRolePlayers = gameState.players.filter(
@@ -100,6 +107,13 @@ const NightPhase = () => {
     }
   };
   
+  const handleViewPlayerRole = (player: Player) => {
+    setPlayerRoleDialog({
+      open: true,
+      player
+    });
+  };
+  
   // If no active roles, move directly to completion
   if (activeRoles.length === 0) {
     return (
@@ -131,7 +145,17 @@ const NightPhase = () => {
           <Moon className="mr-2 h-8 w-8 text-moonlight animate-pulse-slow" />
           Night Phase
         </h1>
-        <GameTimer phase="night" />
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowAllPlayersDialog(true)}
+            className="flex items-center gap-2"
+          >
+            <Users size={18} />
+            All Players
+          </Button>
+          <GameTimer phase="night" />
+        </div>
       </div>
       
       <Card className="bg-night border-moonlight/20 mb-8">
@@ -227,6 +251,73 @@ const NightPhase = () => {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Dialog for showing all players */}
+      <Dialog open={showAllPlayersDialog} onOpenChange={setShowAllPlayersDialog}>
+        <DialogContent className="bg-night border-moonlight/20 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>All Active Players</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto p-2">
+            {gameState.players
+              .filter(p => p.status === 'alive')
+              .map(player => (
+                <div 
+                  key={player.id}
+                  onClick={() => {
+                    handleViewPlayerRole(player);
+                    setShowAllPlayersDialog(false);
+                  }}
+                  className="cursor-pointer hover:opacity-90 transition-opacity"
+                >
+                  <PlayerCard player={player} selectable />
+                </div>
+              ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog for showing player role */}
+      <Dialog 
+        open={playerRoleDialog.open} 
+        onOpenChange={(open) => setPlayerRoleDialog({ ...playerRoleDialog, open })}
+      >
+        <DialogContent className="bg-night border-moonlight/20 max-w-md">
+          <DialogHeader>
+            <DialogTitle>{playerRoleDialog.player?.name}'s Role</DialogTitle>
+          </DialogHeader>
+          
+          {playerRoleDialog.player?.role && (
+            <div className="flex flex-col items-center">
+              <div className={`w-24 h-24 rounded-full mb-4 flex items-center justify-center
+                ${playerRoleDialog.player.role === 'werewolf' ? 'bg-werewolf/20' : 'bg-blue-900/20'}`}>
+                <div className={`w-16 h-16 rounded-full
+                  ${playerRoleDialog.player.role === 'werewolf' ? 'bg-werewolf/50' : 'bg-blue-900/50'}`}>
+                  {playerRoleDialog.player.role === 'werewolf' && (
+                    <div className="wolf-eye top-4 left-4"></div>
+                  )}
+                </div>
+              </div>
+              
+              <h2 className="text-2xl font-bold mb-2">
+                {ROLES[playerRoleDialog.player.role].name}
+              </h2>
+              <p className="text-center text-muted-foreground mb-4">
+                {ROLES[playerRoleDialog.player.role].description}
+              </p>
+              
+              <div className={`inline-block px-3 py-1 rounded-full text-sm
+                ${playerRoleDialog.player.role === 'werewolf' ? 'bg-werewolf/30 text-red-300' : 'bg-blue-900/30 text-blue-300'}`}>
+                Team: {ROLES[playerRoleDialog.player.role].team === 'werewolves' ? 'Werewolves' : 'Village'}
+              </div>
+              
+              <Button className="mt-6" onClick={() => setPlayerRoleDialog({ open: false, player: null })}>
+                Close
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
