@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import PlayerCard from "./PlayerCard";
 import GameTimer from "./GameTimer";
 import { ROLES, getNightActionOrder } from "@/lib/game-data";
-import { Moon, ArrowRight, Users, CheckCircle, XCircle, Sun } from "lucide-react";
+import { Moon, ArrowRight, Users, CheckCircle, XCircle, Sun, VolumeX } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Player } from "@/lib/types";
 
@@ -82,6 +83,7 @@ const NightPhase = () => {
     
     switch (currentRole) {
       case 'werewolf':
+      case 'wolf-cub':
         actionType = 'kill';
         break;
       case 'doctor':
@@ -92,6 +94,9 @@ const NightPhase = () => {
         break;
       case 'witch':
         actionType = 'poison';
+        break;
+      case 'spellcaster':
+        actionType = 'silence';
         break;
       case 'seer':
         actionType = 'view';
@@ -335,10 +340,10 @@ const NightPhase = () => {
           {playerRoleDialog.player?.role && (
             <div className="flex flex-col items-center">
               <div className={`w-24 h-24 rounded-full mb-4 flex items-center justify-center
-                ${playerRoleDialog.player.role === 'werewolf' ? 'bg-werewolf/20' : 'bg-blue-900/20'}`}>
+                ${ROLES[playerRoleDialog.player.role].team === 'werewolves' ? 'bg-werewolf/20' : 'bg-blue-900/20'}`}>
                 <div className={`w-16 h-16 rounded-full
-                  ${playerRoleDialog.player.role === 'werewolf' ? 'bg-werewolf/50' : 'bg-blue-900/50'}`}>
-                  {playerRoleDialog.player.role === 'werewolf' && (
+                  ${ROLES[playerRoleDialog.player.role].team === 'werewolves' ? 'bg-werewolf/50' : 'bg-blue-900/50'}`}>
+                  {ROLES[playerRoleDialog.player.role].team === 'werewolves' && (
                     <div className="wolf-eye top-4 left-4"></div>
                   )}
                 </div>
@@ -352,7 +357,7 @@ const NightPhase = () => {
               </p>
               
               <div className={`inline-block px-3 py-1 rounded-full text-sm
-                ${playerRoleDialog.player.role === 'werewolf' ? 'bg-werewolf/30 text-red-300' : 'bg-blue-900/30 text-blue-300'}`}>
+                ${ROLES[playerRoleDialog.player.role].team === 'werewolves' ? 'bg-werewolf/30 text-red-300' : 'bg-blue-900/30 text-blue-300'}`}>
                 Team: {ROLES[playerRoleDialog.player.role].team === 'werewolves' ? 'Werewolves' : 'Village'}
               </div>
               

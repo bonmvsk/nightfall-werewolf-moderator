@@ -262,7 +262,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     updatedPlayers = updatedPlayers.map(player => ({
       ...player,
       protected: false,
-      targetedBy: []
+      targetedBy: [],
+      silenced: false
     }));
     
     // Apply protection from bodyguard and doctor
@@ -280,7 +281,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     // Record werewolf targets
     gameState.nightActions.forEach(action => {
-      if (action.targetId && action.actionType === 'kill' && action.roleId === 'werewolf') {
+      if (action.targetId && action.actionType === 'kill' && (action.roleId === 'werewolf' || action.roleId === 'wolf-cub')) {
         const targetIndex = updatedPlayers.findIndex(p => p.id === action.targetId);
         if (targetIndex >= 0) {
           // Record that this player was targeted by werewolves
@@ -293,6 +294,19 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (!updatedPlayers[targetIndex].protected) {
             eliminatedIds.push(action.targetId);
           }
+        }
+      }
+    });
+    
+    // Apply spellcaster's silence
+    gameState.nightActions.forEach(action => {
+      if (action.targetId && action.actionType === 'silence' && action.roleId === 'spellcaster') {
+        const targetIndex = updatedPlayers.findIndex(p => p.id === action.targetId);
+        if (targetIndex >= 0) {
+          updatedPlayers[targetIndex] = {
+            ...updatedPlayers[targetIndex],
+            silenced: true
+          };
         }
       }
     });

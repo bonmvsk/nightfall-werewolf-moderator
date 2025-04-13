@@ -10,7 +10,9 @@ export type PlayerRole =
   | 'doctor'
   | 'bodyguard'
   | 'hunter'
-  | 'witch';
+  | 'witch'
+  | 'wolf-cub'
+  | 'spellcaster';
 
 // Game modes
 export type GameMode = 'system' | 'cards';
@@ -27,6 +29,7 @@ export interface Player {
   protected?: boolean;
   poisoned?: boolean;
   targetedBy?: string[];
+  silenced?: boolean;
 }
 
 // Night action

@@ -52,6 +52,19 @@ export const ROLES: Record<PlayerRole, {
     nightAction: "Use save potion or poison potion",
     team: 'village',
     nightPriority: 4
+  },
+  "wolf-cub": {
+    name: "Wolf Cub",
+    description: "Part of the werewolf team. If eliminated, the werewolves get two kills the following night.",
+    team: 'werewolves',
+    nightPriority: 2
+  },
+  "spellcaster": {
+    name: "Spellcaster",
+    description: "Each night, choose one player to silence during the next day. They cannot vote or participate in discussions.",
+    nightAction: "Choose a player to silence",
+    team: 'village',
+    nightPriority: 5
   }
 };
 
@@ -93,6 +106,9 @@ export function getRecommendedRoles(playerCount: number): PlayerRole[] {
   }
   if (playerCount > 12) {
     specialRoles.push('bodyguard');
+  }
+  if (playerCount > 14) {
+    specialRoles.push('spellcaster');
   }
   
   const villagerCount = playerCount - werewolfCount - specialRoles.length;
