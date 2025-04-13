@@ -56,10 +56,10 @@ const PlayerRoleSelection = () => {
   // Check if all players have selected roles
   const allRolesSelected = !gameState.players.some(p => p.role === null);
   
-  // Count teams for summary
+  // Count teams for summary - fixing the type error by using the correct team name
   const teamCounts = {
     village: gameState.players.filter(p => p.role && ROLES[p.role]?.team === 'village').length,
-    werewolf: gameState.players.filter(p => p.role && ROLES[p.role]?.team === 'werewolf').length
+    werewolf: gameState.players.filter(p => p.role && ROLES[p.role]?.team === 'werewolves').length
   };
   
   return (
