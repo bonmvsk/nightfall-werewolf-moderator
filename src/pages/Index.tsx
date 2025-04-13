@@ -1,13 +1,57 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { GameProvider } from "@/contexts/GameContext";
+import GameSetup from "@/components/GameSetup";
+import NightPhase from "@/components/NightPhase";
+import DayPhase from "@/components/DayPhase";
+import GameResult from "@/components/GameResult";
+import { useGame } from "@/contexts/GameContext";
+import { MoonStar, Sun } from "lucide-react";
+
+// Component to render the current game phase
+const GamePhaseRenderer = () => {
+  const { gameState } = useGame();
+  
+  switch (gameState.gamePhase) {
+    case 'setup':
+      return <GameSetup />;
+    case 'night':
+      return <NightPhase />;
+    case 'day':
+      return <DayPhase />;
+    case 'result':
+      return <GameResult />;
+    default:
+      return <GameSetup />;
+  }
+};
+
+// Component to render the background and phase indicator
+const GameBackground = () => {
+  const { gameState } = useGame();
+  
+  return (
+    <div className="min-h-screen">
+      {/* Phase indicator */}
+      {gameState.gamePhase !== 'setup' && gameState.gamePhase !== 'result' && (
+        <div className="fixed top-4 right-4 bg-black/40 backdrop-blur-sm p-2 rounded-full">
+          {gameState.gamePhase === 'night' ? (
+            <MoonStar className="h-6 w-6 text-moonlight animate-pulse-slow" />
+          ) : (
+            <Sun className="h-6 w-6 text-yellow-500 animate-pulse-slow" />
+          )}
+        </div>
+      )}
+      
+      <GamePhaseRenderer />
+    </div>
+  );
+};
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <GameProvider>
+      <GameBackground />
+    </GameProvider>
   );
 };
 
