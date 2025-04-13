@@ -1,4 +1,4 @@
-
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import RoleSelector from "./RoleSelector";
 import { toast } from "sonner";
 
 const GameSetup = () => {
+  const navigate = useNavigate();
   const { gameState, addPlayer, removePlayer, setGameMode, startGame } = useGame();
   const [playerName, setPlayerName] = useState("");
   
@@ -20,6 +21,16 @@ const GameSetup = () => {
     } else {
       toast.error("Please enter a player name");
     }
+  };
+  
+  const handleStartGame = () => {
+    if (gameState.players.length < 5) {
+      toast.error("You need at least 5 players to start the game");
+      return;
+    }
+    
+    startGame();
+    navigate("/role-reveal");
   };
   
   return (
@@ -126,7 +137,7 @@ const GameSetup = () => {
       
       <div className="mt-8 flex justify-center">
         <Button 
-          onClick={startGame}
+          onClick={handleStartGame}
           disabled={gameState.players.length < 5}
           size="lg"
           className="btn-primary px-8 py-6 text-lg"
