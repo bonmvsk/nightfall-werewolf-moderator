@@ -20,10 +20,11 @@ const NightPhase = () => {
     open: false,
     player: null
   });
-  const [seerResult, setSeerResult] = useState<{shown: boolean, isGood: boolean | null, playerName: string}>({
+  const [seerResult, setSeerResult] = useState<{shown: boolean, isGood: boolean | null, playerName: string, actionTaken: boolean}>({
     shown: false,
     isGood: null,
-    playerName: ""
+    playerName: "",
+    actionTaken: false
   });
   
   // Find players with the current night role
@@ -54,6 +55,11 @@ const NightPhase = () => {
   }, []);
   
   const handleSelectPlayer = (playerId: string) => {
+    // If the Seer has already made their selection, don't allow another one
+    if (activeRoles[currentRoleIndex] === 'seer' && seerResult.actionTaken) {
+      return;
+    }
+    
     setSelectedPlayer(playerId);
     
     // If the current role is seer, show the result of their ability
@@ -67,12 +73,13 @@ const NightPhase = () => {
         setSeerResult({
           shown: true,
           isGood,
-          playerName: selectedPlayerData.name
+          playerName: selectedPlayerData.name,
+          actionTaken: true // Mark that the Seer has used their ability
         });
       }
     } else {
       // Reset seer result for other roles
-      setSeerResult({ shown: false, isGood: null, playerName: "" });
+      setSeerResult({ shown: false, isGood: null, playerName: "", actionTaken: false });
     }
   };
   
@@ -88,6 +95,8 @@ const NightPhase = () => {
         actionType = 'kill';
         break;
       case 'doctor':
+        actionType = 'heal';
+        break;
       case 'bodyguard':
         actionType = 'protect';
         break;
@@ -109,7 +118,7 @@ const NightPhase = () => {
     });
     
     // Reset seer result
-    setSeerResult({ shown: false, isGood: null, playerName: "" });
+    setSeerResult(prev => ({ ...prev, shown: false }));
     
     // Move to next role or complete if last
     if (currentRoleIndex < activeRoles.length - 1) {
@@ -124,7 +133,7 @@ const NightPhase = () => {
   
   const handleSkipRole = () => {
     // Move to next role without performing action
-    setSeerResult({ shown: false, isGood: null, playerName: "" });
+    setSeerResult(prev => ({ ...prev, shown: false }));
     
     if (currentRoleIndex < activeRoles.length - 1) {
       setCurrentRoleIndex(currentRoleIndex + 1);
@@ -186,6 +195,11 @@ const NightPhase = () => {
           </CardTitle>
           <CardDescription>
             {currentRoleData?.nightAction || "This role has no night action."}
+            {activeRoles[currentRoleIndex] === 'seer' && seerResult.actionTaken && (
+              <span className="text-yellow-400 block mt-1">
+                You have already used your ability this night.
+              </span>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -246,10 +260,11 @@ const NightPhase = () => {
                     <div 
                       key={player.id} 
                       onClick={() => handleSelectPlayer(player.id)}
+                      className={activeRoles[currentRoleIndex] === 'seer' && seerResult.actionTaken ? 'pointer-events-none opacity-50' : ''}
                     >
                       <PlayerCard 
                         player={player} 
-                        selectable
+                        selectable={!(activeRoles[currentRoleIndex] === 'seer' && seerResult.actionTaken)}
                         selected={selectedPlayer === player.id}
                       />
                     </div>
@@ -268,7 +283,7 @@ const NightPhase = () => {
             
             <Button 
               onClick={handleConfirmAction}
-              disabled={!selectedPlayer && currentRolePlayers.length > 0}
+              disabled={(!selectedPlayer && currentRolePlayers.length > 0) || (activeRoles[currentRoleIndex] === 'seer' && !selectedPlayer)}
               className="flex items-center"
             >
               Continue <ArrowRight className="ml-1 h-4 w-4" />

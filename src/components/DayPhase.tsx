@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import PlayerCard from "./PlayerCard";
 import GameTimer from "./GameTimer";
-import { Sun, AlertCircle, Moon } from "lucide-react";
+import { Sun, AlertCircle, Moon, ShieldAlert, Flask } from "lucide-react";
 
 const DayPhase = () => {
   const { gameState, eliminatePlayer, startNightPhase, startTimer } = useGame();
@@ -15,6 +15,24 @@ const DayPhase = () => {
   useEffect(() => {
     startTimer('day');
   }, []);
+  
+  // Find witch actions if any
+  const witchActions = gameState.nightActions.filter(action => 
+    action.roleId === 'witch' && action.actionType === 'poison'
+  );
+
+  // Find protection actions
+  const protectionActions = gameState.nightActions.filter(action => 
+    (action.roleId === 'bodyguard' && action.actionType === 'protect') || 
+    (action.roleId === 'doctor' && action.actionType === 'heal')
+  );
+
+  // Find protected players who survived werewolf attacks
+  const protectedPlayers = gameState.players.filter(player => 
+    player.status === 'alive' && 
+    player.protected && 
+    player.targetedBy?.some(role => role === 'werewolf')
+  );
   
   return (
     <div className="container mx-auto px-4 max-w-4xl py-8 animate-fade-in">
@@ -27,7 +45,7 @@ const DayPhase = () => {
       </div>
       
       {gameState.eliminatedLastNight.length > 0 && (
-        <Alert className="mb-8 bg-werewolf/20 border-werewolf/30 text-red-300">
+        <Alert className="mb-4 bg-werewolf/20 border-werewolf/30 text-red-300">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Night Results</AlertTitle>
           <AlertDescription>
@@ -46,6 +64,35 @@ const DayPhase = () => {
                   ))}
                 </>
             }
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Show Witch's poison actions */}
+      {witchActions.length > 0 && (
+        <Alert className="mb-4 bg-purple-900/20 border-purple-700/30 text-purple-300">
+          <Flask className="h-4 w-4" />
+          <AlertTitle>Witch's Actions</AlertTitle>
+          <AlertDescription>
+            The Witch used a poison potion on{' '}
+            <span className="font-bold">
+              {gameState.players.find(p => p.id === witchActions[0].targetId)?.name}
+            </span>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Show protection results */}
+      {protectedPlayers.length > 0 && (
+        <Alert className="mb-4 bg-blue-900/20 border-blue-700/30 text-blue-300">
+          <ShieldAlert className="h-4 w-4" />
+          <AlertTitle>Protection Results</AlertTitle>
+          <AlertDescription>
+            {protectedPlayers.map((player, index) => (
+              <div key={player.id}>
+                <span className="font-bold">{player.name}</span> was protected from elimination!
+              </div>
+            ))}
           </AlertDescription>
         </Alert>
       )}

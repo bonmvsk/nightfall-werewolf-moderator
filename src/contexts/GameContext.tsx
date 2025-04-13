@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { 
@@ -257,12 +258,14 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     let updatedPlayers = [...gameState.players];
     const eliminatedIds: string[] = [];
     
+    // First, reset protection statuses from previous night
     updatedPlayers = updatedPlayers.map(player => ({
       ...player,
       protected: false,
       targetedBy: []
     }));
     
+    // Apply protection from bodyguard and doctor
     gameState.nightActions.forEach(action => {
       if (action.targetId && (action.actionType === 'protect' || action.actionType === 'heal')) {
         const targetIndex = updatedPlayers.findIndex(p => p.id === action.targetId);
@@ -275,15 +278,18 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     });
     
+    // Record werewolf targets
     gameState.nightActions.forEach(action => {
-      if (action.targetId && action.actionType === 'kill') {
+      if (action.targetId && action.actionType === 'kill' && action.roleId === 'werewolf') {
         const targetIndex = updatedPlayers.findIndex(p => p.id === action.targetId);
         if (targetIndex >= 0) {
+          // Record that this player was targeted by werewolves
           updatedPlayers[targetIndex] = {
             ...updatedPlayers[targetIndex],
             targetedBy: [...(updatedPlayers[targetIndex].targetedBy || []), action.roleId]
           };
           
+          // Only eliminate if not protected
           if (!updatedPlayers[targetIndex].protected) {
             eliminatedIds.push(action.targetId);
           }
@@ -291,15 +297,15 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     });
     
+    // Apply witch's poison which bypasses protection
     gameState.nightActions.forEach(action => {
-      if (action.targetId && action.actionType === 'poison') {
-        const targetIndex = updatedPlayers.findIndex(p => p.id === action.targetId);
-        if (targetIndex >= 0) {
-          eliminatedIds.push(action.targetId);
-        }
+      if (action.targetId && action.actionType === 'poison' && action.roleId === 'witch') {
+        // Witch's poison always kills, regardless of protection
+        eliminatedIds.push(action.targetId);
       }
     });
     
+    // Update player statuses based on elimination
     updatedPlayers = updatedPlayers.map(player => ({
       ...player,
       status: eliminatedIds.includes(player.id) ? 'dead' : player.status
