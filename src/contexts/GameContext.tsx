@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { 
@@ -25,8 +26,6 @@ interface GameContextType {
   startTimer: (phase: 'day' | 'night') => void;
   stopTimer: (phase: 'day' | 'night') => void;
   resetTimer: (phase: 'day' | 'night') => void;
-  updatePlayerRole: (playerId: string, role: PlayerRole) => void;
-  completeRoleSelection: () => void;
 }
 
 const defaultGameState: GameState = {
@@ -40,8 +39,7 @@ const defaultGameState: GameState = {
   dayTimerActive: false,
   nightTimerActive: false,
   eliminatedLastNight: [],
-  winner: null,
-  roleSelectionActive: false,
+  winner: null
 };
 
 export const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -191,30 +189,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     toast.success("Custom roles have been assigned");
   };
 
-  const updatePlayerRole = (playerId: string, role: PlayerRole) => {
-    setGameState(prevState => ({
-      ...prevState,
-      players: prevState.players.map(player => 
-        player.id === playerId ? { ...player, role } : player
-      )
-    }));
-    
-    toast.success(`Role selected successfully`);
-  };
-
-  const completeRoleSelection = () => {
-    setGameState(prevState => ({
-      ...prevState,
-      gamePhase: 'night',
-      currentNightRole: 'seer',
-      nightActions: [],
-      eliminatedLastNight: [],
-      roleSelectionActive: false
-    }));
-    
-    toast.info("The game has begun. Night has fallen...");
-  };
-
   const startGame = () => {
     if (gameState.players.length < 5) {
       toast.error("You need at least 5 players to start the game");
@@ -237,23 +211,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         nightActions: [],
         eliminatedLastNight: []
       }));
-      
-      toast.info("The game has begun. Night has fallen...");
-    } else if (gameState.gameMode === 'cards') {
-      // For card mode, activate role selection flow
-      setGameState(prevState => ({
-        ...prevState,
-        roleSelectionActive: true,
-        // Reset all roles to null to allow selection
-        players: prevState.players.map(player => ({
-          ...player,
-          role: null
-        }))
-      }));
-      
-      toast.info("Please have each player select their role");
     } else {
-      // If roles are already assigned
+      // If roles are already assigned or using card mode
       setGameState(prevState => ({
         ...prevState,
         gamePhase: 'night',
@@ -261,9 +220,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         nightActions: [],
         eliminatedLastNight: []
       }));
-      
-      toast.info("The game has begun. Night has fallen...");
     }
+    
+    toast.info("The game has begun. Night has fallen...");
   };
 
   const resetGame = () => {
@@ -508,9 +467,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       updateTimerSettings,
       startTimer,
       stopTimer,
-      resetTimer,
-      updatePlayerRole,
-      completeRoleSelection
+      resetTimer
     }}>
       {children}
     </GameContext.Provider>
