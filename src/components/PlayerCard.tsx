@@ -13,6 +13,7 @@ interface PlayerCardProps {
   selectable?: boolean;
   selected?: boolean;
   gamePhase?: string;
+  hideRoleButton?: boolean;
 }
 
 const PlayerCard = ({ 
@@ -20,7 +21,8 @@ const PlayerCard = ({
   onVote, 
   selectable = false, 
   selected = false,
-  gamePhase 
+  gamePhase,
+  hideRoleButton = false
 }: PlayerCardProps) => {
   const { gameState, viewRole } = useGame();
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
@@ -74,7 +76,7 @@ const PlayerCard = ({
           
           {/* Action buttons */}
           <div className="flex-shrink-0">
-            {gameState.gamePhase === 'setup' && (
+            {gameState.gamePhase === 'setup' && !hideRoleButton && (
               <Button 
                 variant="ghost" 
                 size="sm" 

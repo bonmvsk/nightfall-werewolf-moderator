@@ -25,6 +25,7 @@ interface GameContextType {
   startTimer: (phase: 'day' | 'night') => void;
   stopTimer: (phase: 'day' | 'night') => void;
   resetTimer: (phase: 'day' | 'night') => void;
+  updatePlayerRole: (playerId: string, role: PlayerRole) => void;
 }
 
 const defaultGameState: GameState = {
@@ -198,22 +199,20 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           ...player,
           role: shuffledRoles[index]
         })),
-        gamePhase: 'night',
-        currentNightRole: 'seer',
+        gamePhase: 'role-reveal',
         nightActions: [],
         eliminatedLastNight: []
       }));
     } else {
       setGameState(prevState => ({
         ...prevState,
-        gamePhase: 'night',
-        currentNightRole: 'seer',
+        gamePhase: 'role-reveal',
         nightActions: [],
         eliminatedLastNight: []
       }));
     }
     
-    toast.info("The game has begun. Night has fallen...");
+    toast.info("Time to reveal roles to players");
   };
 
   const resetGame = () => {
@@ -420,6 +419,15 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const updatePlayerRole = (playerId: string, role: PlayerRole) => {
+    setGameState(prevState => ({
+      ...prevState,
+      players: prevState.players.map(player => 
+        player.id === playerId ? { ...player, role } : player
+      )
+    }));
+  };
+
   return (
     <GameContext.Provider value={{
       gameState,
@@ -439,7 +447,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       updateTimerSettings,
       startTimer,
       stopTimer,
-      resetTimer
+      resetTimer,
+      updatePlayerRole
     }}>
       {children}
     </GameContext.Provider>

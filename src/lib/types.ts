@@ -1,6 +1,6 @@
 
 // Game phases
-export type GamePhase = 'setup' | 'night' | 'day' | 'result';
+export type GamePhase = 'setup' | 'role-reveal' | 'night' | 'day' | 'result';
 
 // Player roles
 export type PlayerRole = 

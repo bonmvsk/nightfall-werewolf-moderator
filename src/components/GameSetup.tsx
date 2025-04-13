@@ -56,7 +56,7 @@ const GameSetup = () => {
                 {gameState.players.map(player => (
                   <div key={player.id} className="flex">
                     <div className="flex-grow">
-                      <PlayerCard player={player} />
+                      <PlayerCard player={player} hideRoleButton={true} />
                     </div>
                     <Button 
                       variant="destructive" 

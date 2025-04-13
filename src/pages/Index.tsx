@@ -1,6 +1,7 @@
 
 import { GameProvider } from "@/contexts/GameContext";
 import GameSetup from "@/components/GameSetup";
+import RoleReveal from "@/components/RoleReveal";
 import NightPhase from "@/components/NightPhase";
 import DayPhase from "@/components/DayPhase";
 import GameResult from "@/components/GameResult";
@@ -14,6 +15,8 @@ const GamePhaseRenderer = () => {
   switch (gameState.gamePhase) {
     case 'setup':
       return <GameSetup />;
+    case 'role-reveal':
+      return <RoleReveal />;
     case 'night':
       return <NightPhase />;
     case 'day':
@@ -32,7 +35,7 @@ const GameBackground = () => {
   return (
     <div className="min-h-screen">
       {/* Phase indicator */}
-      {gameState.gamePhase !== 'setup' && gameState.gamePhase !== 'result' && (
+      {gameState.gamePhase !== 'setup' && gameState.gamePhase !== 'result' && gameState.gamePhase !== 'role-reveal' && (
         <div className="fixed top-4 right-4 bg-black/40 backdrop-blur-sm p-2 rounded-full">
           {gameState.gamePhase === 'night' ? (
             <MoonStar className="h-6 w-6 text-moonlight animate-pulse-slow" />
