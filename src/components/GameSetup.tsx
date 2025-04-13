@@ -25,11 +25,6 @@ const GameSetup = () => {
   };
   
   const handleStartGame = () => {
-    if (gameState.players.length < 5) {
-      toast.error("You need at least 5 players to start the game");
-      return;
-    }
-    
     // For system mode, check if selected roles match player count
     if (gameState.gameMode === 'system') {
       // Count how many roles are actually selected
