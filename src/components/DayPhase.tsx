@@ -91,19 +91,19 @@ const DayPhase = () => {
         </Alert>
       )}
 
-      {someoneWasProtected && (
-        <Alert className="mb-4 bg-blue-900/20 border-blue-700/30 text-blue-300">
-          <ShieldAlert className="h-4 w-4" />
-          <AlertTitle>Protection Results</AlertTitle>
-          <AlertDescription>
-            {protectedPlayers.map((player, index) => (
-              <div key={player.id}>
-                <span className="font-bold">{player.name}</span> was protected from elimination!
-              </div>
-            ))}
-          </AlertDescription>
-        </Alert>
-      )}
+     // {someoneWasProtected && (
+     //   <Alert className="mb-4 bg-blue-900/20 border-blue-700/30 text-blue-300">
+      //    <ShieldAlert className="h-4 w-4" />
+       //   <AlertTitle>Protection Results</AlertTitle>
+       //   <AlertDescription>
+         //   {protectedPlayers.map((player, index) => (
+           //   <div key={player.id}>
+         //       <span className="font-bold">{player.name}</span> was protected from elimination!
+         //     </div>
+        //    ))}
+        //  </AlertDescription>
+       // </Alert>
+     // )}
       
       <Card className="bg-night border-moonlight/20 mb-8">
         <CardHeader>
@@ -137,21 +137,6 @@ const DayPhase = () => {
         </CardFooter>
       </Card>
       
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Surviving Players</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {gameState.players
-            .filter(p => p.status === 'alive')
-            .map(player => (
-              <div 
-                key={player.id}
-                className="bg-night/50 border border-moonlight/10 rounded-md p-2 text-center"
-              >
-                {player.name}
-              </div>
-            ))}
-        </div>
-      </div>
     </div>
   );
 };
