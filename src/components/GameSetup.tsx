@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useGame } from "@/contexts/GameContext";
@@ -27,6 +28,17 @@ const GameSetup = () => {
     if (gameState.players.length < 5) {
       toast.error("You need at least 5 players to start the game");
       return;
+    }
+    
+    // For system mode, check if selected roles match player count
+    if (gameState.gameMode === 'system') {
+      // Get number of selected roles from the role selector
+      const selectedRolesCount = document.querySelectorAll('[data-role-selected="true"]').length;
+      
+      if (selectedRolesCount !== gameState.players.length) {
+        toast.error(`You need exactly ${gameState.players.length} roles selected to match the player count`);
+        return;
+      }
     }
     
     startGame();

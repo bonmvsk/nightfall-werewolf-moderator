@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";
@@ -43,17 +42,6 @@ const RoleReveal = () => {
     revealedPlayers.has(player.id)
   );
   
-  // When all players have revealed their roles, automatically redirect to game
-  useEffect(() => {
-    if (allPlayersRevealed && revealedPlayers.size > 0) {
-      const timer = setTimeout(() => {
-        handleStartGame();
-      }, 1500); // Small delay to allow user to see that all roles are ready
-      
-      return () => clearTimeout(timer);
-    }
-  }, [allPlayersRevealed, revealedPlayers.size]);
-  
   const handleStartGame = () => {
     startNightPhase();
     navigate("/");
@@ -65,27 +53,21 @@ const RoleReveal = () => {
   
   const isWerewolf = selectedPlayer?.role === 'werewolf';
   
-  // Get available roles based on game settings and what's already assigned
   const getAvailableRoles = () => {
-    // Start with all recommended roles
     const allRoles = Object.keys(ROLES) as PlayerRole[];
     
     if (gameState.gameMode === 'system') {
-      // For system mode, return the assigned roles
       return allRoles;
     } else {
-      // For card mode, filter out roles that have been assigned already
       const assignedRoles = gameState.players
         .filter(p => p.role && revealedPlayers.has(p.id))
         .map(p => p.role as PlayerRole);
       
-      // Count how many of each role type we assigned
       const roleCounts: Record<string, number> = {};
       assignedRoles.forEach(role => {
         roleCounts[role] = (roleCounts[role] || 0) + 1;
       });
       
-      // Filter available roles based on what's been assigned
       return allRoles;
     }
   };
@@ -179,11 +161,9 @@ const RoleReveal = () => {
         </Button>
       </div>
       
-      {/* Role reveal dialog for system mode */}
       <Dialog open={roleDialogOpen} onOpenChange={(open) => {
         setRoleDialogOpen(open);
         if (!open && selectedPlayerId) {
-          // When dialog closes, mark as revealed
           setRevealedPlayers(prev => new Set([...prev, selectedPlayerId]));
         }
       }}>

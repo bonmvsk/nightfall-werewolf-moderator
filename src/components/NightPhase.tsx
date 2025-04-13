@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import PlayerCard from "./PlayerCard";
 import GameTimer from "./GameTimer";
 import { ROLES, getNightActionOrder } from "@/lib/game-data";
-import { Moon, ArrowRight, Users, CheckCircle, XCircle } from "lucide-react";
+import { Moon, ArrowRight, Users, CheckCircle, XCircle, Sun } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Player } from "@/lib/types";
 
@@ -26,8 +25,8 @@ const NightPhase = () => {
     playerName: "",
     actionTaken: false
   });
+  const [allRolesCompleted, setAllRolesCompleted] = useState(false);
   
-  // Find players with the current night role
   const currentRolePlayers = gameState.players.filter(
     p => p.role === activeRoles[currentRoleIndex] && p.status === 'alive'
   );
@@ -36,9 +35,7 @@ const NightPhase = () => {
     ? ROLES[activeRoles[currentRoleIndex] as any] 
     : null;
   
-  // Set up active roles on component mount
   useEffect(() => {
-    // Get all roles that have night actions
     const playerRoles = gameState.players
       .filter(p => p.status === 'alive')
       .map(p => p.role)
@@ -47,7 +44,6 @@ const NightPhase = () => {
     const nightActionRoles = getNightActionOrder(playerRoles as any);
     setActiveRoles(nightActionRoles);
     
-    // Start with first role if available
     if (nightActionRoles.length > 0) {
       setCurrentRoleIndex(0);
       startTimer('night');
@@ -55,30 +51,25 @@ const NightPhase = () => {
   }, []);
   
   const handleSelectPlayer = (playerId: string) => {
-    // If the Seer has already made their selection, don't allow another one
     if (activeRoles[currentRoleIndex] === 'seer' && seerResult.actionTaken) {
       return;
     }
     
     setSelectedPlayer(playerId);
     
-    // If the current role is seer, show the result of their ability
     if (activeRoles[currentRoleIndex] === 'seer') {
       const selectedPlayerData = gameState.players.find(p => p.id === playerId);
       if (selectedPlayerData) {
-        // Check if player is good (village team) or bad (werewolf team)
         const playerRole = selectedPlayerData.role;
-        const isGood = playerRole ? ROLES[playerRole].team === 'village' : true; // Default to village if no role
-        
+        const isGood = playerRole ? ROLES[playerRole].team === 'village' : true;
         setSeerResult({
           shown: true,
           isGood,
           playerName: selectedPlayerData.name,
-          actionTaken: true // Mark that the Seer has used their ability
+          actionTaken: true
         });
       }
     } else {
-      // Reset seer result for other roles
       setSeerResult({ shown: false, isGood: null, playerName: "", actionTaken: false });
     }
   };
@@ -87,9 +78,8 @@ const NightPhase = () => {
     if (!selectedPlayer || !activeRoles[currentRoleIndex]) return;
     
     const currentRole = activeRoles[currentRoleIndex];
-    let actionType = 'view'; // Default action
+    let actionType = 'view';
     
-    // Determine action type based on role
     switch (currentRole) {
       case 'werewolf':
         actionType = 'kill';
@@ -101,7 +91,6 @@ const NightPhase = () => {
         actionType = 'protect';
         break;
       case 'witch':
-        // For simplicity, witch just poisons someone
         actionType = 'poison';
         break;
       case 'seer':
@@ -109,7 +98,6 @@ const NightPhase = () => {
         break;
     }
     
-    // Record the action
     performNightAction({
       roleId: currentRole,
       roleName: ROLES[currentRole as any].name,
@@ -117,31 +105,26 @@ const NightPhase = () => {
       actionType
     });
     
-    // Reset seer result
     setSeerResult(prev => ({ ...prev, shown: false }));
     
-    // Move to next role or complete if last
     if (currentRoleIndex < activeRoles.length - 1) {
       setCurrentRoleIndex(currentRoleIndex + 1);
       setSelectedPlayer(null);
     } else {
-      // All roles have acted, complete night phase
-      completeNightPhase();
-      stopTimer('night');
+      setAllRolesCompleted(true);
+      setSelectedPlayer(null);
     }
   };
   
   const handleSkipRole = () => {
-    // Move to next role without performing action
     setSeerResult(prev => ({ ...prev, shown: false }));
     
     if (currentRoleIndex < activeRoles.length - 1) {
       setCurrentRoleIndex(currentRoleIndex + 1);
       setSelectedPlayer(null);
     } else {
-      // All roles have acted, complete night phase
-      completeNightPhase();
-      stopTimer('night');
+      setAllRolesCompleted(true);
+      setSelectedPlayer(null);
     }
   };
   
@@ -152,7 +135,6 @@ const NightPhase = () => {
     });
   };
   
-  // If no active roles, move directly to completion
   if (activeRoles.length === 0) {
     return (
       <div className="container mx-auto px-4 max-w-4xl py-8 animate-fade-in text-center">
@@ -169,6 +151,34 @@ const NightPhase = () => {
           <CardContent className="flex justify-center py-6">
             <Button onClick={completeNightPhase} size="lg">
               Continue to Day Phase
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  if (allRolesCompleted) {
+    return (
+      <div className="container mx-auto px-4 max-w-4xl py-8 animate-fade-in text-center">
+        <Card className="bg-night border-moonlight/20">
+          <CardHeader>
+            <CardTitle className="text-center flex items-center justify-center text-2xl">
+              <Moon className="mr-2 h-6 w-6 text-moonlight" />
+              Night Phase Complete
+            </CardTitle>
+            <CardDescription className="text-center">
+              All night actions have been completed. Dawn approaches...
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center py-6">
+            <Button 
+              onClick={completeNightPhase} 
+              size="lg"
+              className="flex items-center gap-2"
+            >
+              <Sun className="h-5 w-5" />
+              Proceed to Day Phase
             </Button>
           </CardContent>
         </Card>
@@ -224,9 +234,6 @@ const NightPhase = () => {
             </div>
           </div>
           
-          {/* The "Players with this role" section is now hidden */}
-          
-          {/* Display Seer's result when a player is selected */}
           {activeRoles[currentRoleIndex] === 'seer' && seerResult.shown && (
             <div className="mb-6 p-4 rounded-lg border border-moonlight/30 bg-night-dark">
               <h3 className="text-lg font-semibold mb-2">Seer Result:</h3>
@@ -292,7 +299,6 @@ const NightPhase = () => {
         </CardContent>
       </Card>
       
-      {/* Dialog for showing all players */}
       <Dialog open={showAllPlayersDialog} onOpenChange={setShowAllPlayersDialog}>
         <DialogContent className="bg-night border-moonlight/20 max-w-2xl">
           <DialogHeader>
@@ -317,7 +323,6 @@ const NightPhase = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Dialog for showing player role */}
       <Dialog 
         open={playerRoleDialog.open} 
         onOpenChange={(open) => setPlayerRoleDialog({ ...playerRoleDialog, open })}
