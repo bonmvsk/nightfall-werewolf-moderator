@@ -14,6 +14,7 @@ interface PlayerCardProps {
   selected?: boolean;
   gamePhase?: string;
   hideRoleButton?: boolean;
+  disabled?: boolean; // Added this missing prop
 }
 
 const PlayerCard = ({ 
@@ -22,7 +23,8 @@ const PlayerCard = ({
   selectable = false, 
   selected = false,
   gamePhase,
-  hideRoleButton = false
+  hideRoleButton = false,
+  disabled = false // Default to false
 }: PlayerCardProps) => {
   const { gameState, viewRole } = useGame();
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
@@ -66,6 +68,9 @@ const PlayerCard = ({
             {player.status === 'dead' && (
               <p className="text-sm text-red-400">Eliminated</p>
             )}
+            {disabled && player.status === 'alive' && (
+              <p className="text-sm text-amber-400">Silenced</p>
+            )}
           </div>
           
           {/* Action buttons */}
@@ -87,6 +92,7 @@ const PlayerCard = ({
                 variant="destructive" 
                 size="sm" 
                 onClick={onVote}
+                disabled={disabled}
               >
                 Eliminate
               </Button>
