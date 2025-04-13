@@ -36,62 +36,84 @@ const RoleSelector = () => {
     
     setSelectedRoles(prev => {
       // If removing a role would make the total less than player count, add a villager
-      if (prev.includes(role) && prev.length <= gameState.players.length) {
-        const newRoles = prev.filter(r => r !== role);
-        if (newRoles.length < gameState.players.length) {
-          newRoles.push('villager');
+      if (prev.includes(role)) {
+        // Check how many of this role we have
+        const roleCount = prev.filter(r => r === role).length;
+        if (roleCount > 1) {
+          // If we have multiple, just remove one
+          const newRoles = [...prev];
+          const roleIndex = newRoles.indexOf(role);
+          if (roleIndex !== -1) {
+            newRoles.splice(roleIndex, 1);
+            // Add a villager to maintain count
+            if (newRoles.length < gameState.players.length) {
+              newRoles.push('villager');
+            }
+            return newRoles;
+          }
+        } else {
+          // If we have just one, remove it
+          const newRoles = prev.filter(r => r !== role);
+          // Add a villager to maintain count
+          if (newRoles.length < gameState.players.length) {
+            newRoles.push('villager');
+          }
+          return newRoles;
         }
-        return newRoles;
       }
       
       // If adding a role would make the total more than player count, remove a villager
-      if (!prev.includes(role) && prev.length >= gameState.players.length) {
-        const villagerIndex = prev.indexOf('villager');
-        if (villagerIndex !== -1) {
+      if (!prev.includes(role) || prev.filter(r => r === role).length < selectedRoleCounts[role]) {
+        if (prev.length >= gameState.players.length) {
+          const villagerIndex = prev.indexOf('villager');
+          if (villagerIndex !== -1) {
+            const newRoles = [...prev];
+            newRoles.splice(villagerIndex, 1);
+            newRoles.push(role);
+            return newRoles;
+          }
+          // If no villagers to remove, try to keep the count the same
           const newRoles = [...prev];
-          newRoles.splice(villagerIndex, 1);
+          newRoles.pop(); // Remove the last role
           newRoles.push(role);
           return newRoles;
+        } else {
+          // Just add the role
+          return [...prev, role];
         }
-        return prev;
       }
       
-      // Otherwise just toggle
-      return prev.includes(role) 
-        ? prev.filter(r => r !== role) 
-        : [...prev, role];
+      return prev;
     });
   };
   
   const handleApplyCustomRoles = () => {
-    if (selectedRoles.length !== gameState.players.length) {
-      // Add or remove villagers to match player count
-      const diff = gameState.players.length - selectedRoles.length;
-      let adjustedRoles = [...selectedRoles];
-      
-      if (diff > 0) {
-        // Add villagers
-        for (let i = 0; i < diff; i++) {
-          adjustedRoles.push('villager');
-        }
-      } else if (diff < 0) {
-        // Remove villagers if possible
-        for (let i = 0; i < Math.abs(diff); i++) {
-          const villagerIndex = adjustedRoles.indexOf('villager');
-          if (villagerIndex !== -1) {
-            adjustedRoles.splice(villagerIndex, 1);
-          } else {
-            // Can't remove more villagers, so break
-            break;
-          }
+    let adjustedRoles = [...selectedRoles];
+    const diff = gameState.players.length - adjustedRoles.length;
+    
+    if (diff > 0) {
+      // Add villagers if we have too few roles
+      for (let i = 0; i < diff; i++) {
+        adjustedRoles.push('villager');
+      }
+    } else if (diff < 0) {
+      // Remove roles if we have too many
+      // Prioritize removing villagers first
+      for (let i = 0; i < Math.abs(diff); i++) {
+        const villagerIndex = adjustedRoles.indexOf('villager');
+        if (villagerIndex !== -1) {
+          adjustedRoles.splice(villagerIndex, 1);
+        } else {
+          // If no villagers to remove, just remove the last role
+          adjustedRoles.pop();
         }
       }
-      
-      setSelectedRoles(adjustedRoles);
     }
     
+    setSelectedRoles(adjustedRoles);
+    
     // Apply the selected roles
-    setCustomRoles(selectedRoles);
+    setCustomRoles(adjustedRoles);
     setIsCustomizing(false);
   };
   

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,12 @@ const DayPhase = () => {
     player.protected && 
     player.targetedBy?.some(role => role === 'werewolf')
   );
+
+  // Check if anyone was targeted by werewolves but protected
+  const someoneWasProtected = protectedPlayers.length > 0;
+  
+  // Check if no one was eliminated during the night
+  const noOneEliminated = gameState.eliminatedLastNight.length === 0;
   
   return (
     <div className="container mx-auto px-4 max-w-4xl py-8 animate-fade-in">
@@ -39,7 +46,7 @@ const DayPhase = () => {
         <GameTimer phase="day" />
       </div>
       
-      {gameState.eliminatedLastNight.length > 0 && (
+      {gameState.eliminatedLastNight.length > 0 ? (
         <Alert className="mb-4 bg-werewolf/20 border-werewolf/30 text-red-300">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Night Results</AlertTitle>
@@ -61,6 +68,14 @@ const DayPhase = () => {
             }
           </AlertDescription>
         </Alert>
+      ) : (
+        <Alert className="mb-4 bg-blue-900/20 border-blue-700/30 text-blue-300">
+          <ShieldAlert className="h-4 w-4" />
+          <AlertTitle>Night Results</AlertTitle>
+          <AlertDescription>
+            No one was eliminated tonight.
+          </AlertDescription>
+        </Alert>
       )}
 
       {witchActions.length > 0 && (
@@ -76,7 +91,7 @@ const DayPhase = () => {
         </Alert>
       )}
 
-      {protectedPlayers.length > 0 && (
+      {someoneWasProtected && (
         <Alert className="mb-4 bg-blue-900/20 border-blue-700/30 text-blue-300">
           <ShieldAlert className="h-4 w-4" />
           <AlertTitle>Protection Results</AlertTitle>

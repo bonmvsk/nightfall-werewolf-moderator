@@ -32,11 +32,21 @@ const GameSetup = () => {
     
     // For system mode, check if selected roles match player count
     if (gameState.gameMode === 'system') {
-      // Get number of selected roles from the role selector
-      const selectedRolesCount = document.querySelectorAll('[data-role-selected="true"]').length;
+      // Count how many roles are actually selected
+      // Get data-role-selected elements (RoleCard components with selected prop)
+      const selectedRolesElements = document.querySelectorAll('[data-role-selected="true"]');
       
-      if (selectedRolesCount !== gameState.players.length) {
-        toast.error(`You need exactly ${gameState.players.length} roles selected to match the player count`);
+      // Get the total count by summing the data-role-count attributes
+      let totalRolesCount = 0;
+      selectedRolesElements.forEach(element => {
+        const countStr = element.getAttribute('data-role-count');
+        if (countStr) {
+          totalRolesCount += parseInt(countStr, 10);
+        }
+      });
+      
+      if (totalRolesCount !== gameState.players.length) {
+        toast.error(`You need exactly ${gameState.players.length} roles selected to match the player count. Currently selected: ${totalRolesCount}`);
         return;
       }
     }
