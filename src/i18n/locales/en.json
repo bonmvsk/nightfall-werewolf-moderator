@@ -25,7 +25,18 @@
     "gameOver": "Game Over",
     "playAgain": "Play Again",
     "survives": "Survives",
-    "dies": "Dies"
+    "dies": "Dies",
+    "role": "Role",
+    "team": "Team",
+    "continue": "Continue",
+    "skip": "Skip",
+    "close": "Close",
+    "apply": "Apply",
+    "cancel": "Cancel",
+    "iUnderstandMyRole": "I understand my role",
+    "eliminate": "Eliminate",
+    "nightAction": "Night action",
+    "unknownRole": "Unknown Role"
   },
   "setup": {
     "title": "Werewolf Game Setup",
@@ -41,7 +52,10 @@
     "roleDistribution": "Role Distribution",
     "startGame": "Start Game",
     "needMorePlayers": "You need at least 5 players to start the game",
-    "rolesMismatch": "You need exactly {{count}} roles selected to match the player count. Currently selected: {{selected}}"
+    "rolesMismatch": "You need exactly {{count}} roles selected to match the player count. Currently selected: {{selected}}",
+    "customizeRoles": "Customize Roles",
+    "customizeRolesDescription": "Click on roles to add or remove them. The total number of roles must match the number of players ({{playerCount}}).",
+    "totalRolesSelected": "Total roles selected"
   },
   "roles": {
     "werewolf": {
@@ -88,7 +102,22 @@
     "yourRoleIs": "Your Role is",
     "keepSecretInstruction": "Keep this information secret!",
     "allRevealed": "All players have seen their roles!",
-    "proceedToNight": "Proceed to Night Phase"
+    "proceedToNight": "Proceed to Night Phase",
+    "viewAssignedRole": "View Your Assigned Role",
+    "selectRoleCard": "Select Your Role Card",
+    "roleReveal": "Role Reveal",
+    "roleSelection": "Role Selection",
+    "secretlyViewRole": "Each player should secretly view their assigned role.",
+    "selectRoleFromCard": "Each player should select the role from their physical card.",
+    "viewed": "Viewed",
+    "roleSelected": "Role selected",
+    "viewRole": "View Role",
+    "selectRole": "Select Role",
+    "startGame": "Start Game",
+    "waitingForPlayers": "Waiting for all players...",
+    "alreadyViewed": "You've already viewed this role",
+    "roleSet": "Role has been set",
+    "gameBegins": "The game begins!"
   },
   "night": {
     "title": "Night Phase",
@@ -96,7 +125,18 @@
     "action": "Choose a player to {{action}}:",
     "confirmAction": "Confirm {{action}}",
     "nightSummary": "Night Summary",
-    "proceedToDay": "Proceed to Day Phase"
+    "proceedToDay": "Proceed to Day Phase",
+    "noRolesWithNightActions": "No roles have night actions. Proceeding to day phase...",
+    "nightComplete": "Night Phase Complete",
+    "allActionsCompleted": "All night actions have been completed. Dawn approaches...",
+    "noNightAction": "This role has no night action.",
+    "alreadyUsedAbility": "You have already used your ability this night.",
+    "stepProgress": "Step {{current}} of {{total}}",
+    "seerResult": "Seer Result",
+    "isGood": "is Good (Village Team)",
+    "isBad": "is Bad (Werewolf Team)",
+    "selectTarget": "Select a target",
+    "allActivePlayers": "All Active Players"
   },
   "day": {
     "title": "Day Phase",

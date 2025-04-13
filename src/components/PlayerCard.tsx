@@ -6,6 +6,7 @@ import { useState } from "react";
 import { UserIcon, Skull, Shield, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useTranslation } from "react-i18next";
 
 interface PlayerCardProps {
   player: Player;
@@ -14,7 +15,7 @@ interface PlayerCardProps {
   selected?: boolean;
   gamePhase?: string;
   hideRoleButton?: boolean;
-  disabled?: boolean; // Added this missing prop
+  disabled?: boolean;
 }
 
 const PlayerCard = ({ 
@@ -24,8 +25,9 @@ const PlayerCard = ({
   selected = false,
   gamePhase,
   hideRoleButton = false,
-  disabled = false // Default to false
+  disabled = false
 }: PlayerCardProps) => {
+  const { t } = useTranslation();
   const { gameState, viewRole } = useGame();
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   
@@ -36,7 +38,7 @@ const PlayerCard = ({
     if (gameState.gameMode === 'system') {
       setRoleDialogOpen(true);
     } else {
-      viewRole(player.id); // For card mode, just show toast
+      viewRole(player.id);
     }
   };
   
@@ -66,10 +68,10 @@ const PlayerCard = ({
           <div className="flex-grow">
             <h3 className="text-lg font-bold">{player.name}</h3>
             {player.status === 'dead' && (
-              <p className="text-sm text-red-400">Eliminated</p>
+              <p className="text-sm text-red-400">{t('common.eliminated')}</p>
             )}
             {disabled && player.status === 'alive' && (
-              <p className="text-sm text-amber-400">Silenced</p>
+              <p className="text-sm text-amber-400">{t('common.silenced')}</p>
             )}
           </div>
           
@@ -83,7 +85,7 @@ const PlayerCard = ({
                 className="flex items-center gap-1"
               >
                 <Eye className="h-4 w-4" />
-                <span>Role</span>
+                <span>{t('common.role')}</span>
               </Button>
             )}
             
@@ -94,7 +96,7 @@ const PlayerCard = ({
                 onClick={onVote}
                 disabled={disabled}
               >
-                Eliminate
+                {t('common.eliminate')}
               </Button>
             )}
           </div>
@@ -105,7 +107,7 @@ const PlayerCard = ({
       <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
         <DialogContent className="bg-night border-moonlight/20 max-w-md">
           <DialogHeader>
-            <DialogTitle>{player.name}'s Role</DialogTitle>
+            <DialogTitle>{player.name}'s {t('common.role')}</DialogTitle>
           </DialogHeader>
           
           {player.role && (
@@ -120,18 +122,18 @@ const PlayerCard = ({
                 </div>
               </div>
               
-              <h2 className="text-2xl font-bold mb-2">{ROLES[player.role].name}</h2>
+              <h2 className="text-2xl font-bold mb-2">{t(`roles.${player.role}.name`)}</h2>
               <p className="text-center text-muted-foreground mb-4">
-                {ROLES[player.role].description}
+                {t(`roles.${player.role}.description`)}
               </p>
               
               <div className={`inline-block px-3 py-1 rounded-full text-sm
                 ${isWerewolf ? 'bg-werewolf/30 text-red-300' : 'bg-blue-900/30 text-blue-300'}`}>
-                Team: {isWerewolf ? 'Werewolves' : 'Village'}
+                {t('common.team')}: {isWerewolf ? t('common.werewolves') : t('common.village')}
               </div>
               
               <Button className="mt-6" onClick={() => setRoleDialogOpen(false)}>
-                I understand my role
+                {t('common.iUnderstandMyRole')}
               </Button>
             </div>
           )}

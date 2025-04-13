@@ -1,11 +1,14 @@
+
 import { useState, useEffect } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";
 import { PlayerRole } from "@/lib/types";
 import { getRecommendedRoles, ROLES } from "@/lib/game-data";
 import RoleCard from "./RoleCard";
+import { useTranslation } from "react-i18next";
 
 const RoleSelector = () => {
+  const { t } = useTranslation();
   const { gameState, setCustomRoles } = useGame();
   const [selectedRoles, setSelectedRoles] = useState<PlayerRole[]>([]);
   const [isCustomizing, setIsCustomizing] = useState(false);
@@ -111,9 +114,9 @@ const RoleSelector = () => {
   return (
     <div className="glass-card p-6 rounded-xl my-8">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Role Distribution</h2>
+        <h2 className="text-xl font-semibold">{t('setup.roleDistribution')}</h2>
         {!isCustomizing ? (
-          <Button onClick={() => setIsCustomizing(true)}>Customize Roles</Button>
+          <Button onClick={() => setIsCustomizing(true)}>{t('setup.customizeRoles')}</Button>
         ) : (
           <div className="flex gap-2">
             <Button 
@@ -123,9 +126,9 @@ const RoleSelector = () => {
                 setIsCustomizing(false);
               }}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
-            <Button onClick={handleApplyCustomRoles}>Apply</Button>
+            <Button onClick={handleApplyCustomRoles}>{t('common.apply')}</Button>
           </div>
         )}
       </div>
@@ -133,7 +136,7 @@ const RoleSelector = () => {
       {isCustomizing ? (
         <div>
           <p className="mb-4 text-muted-foreground">
-            Click on roles to add or remove them. The total number of roles must match the number of players ({gameState.players.length}).
+            {t('setup.customizeRolesDescription', { playerCount: gameState.players.length })}
           </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -150,7 +153,7 @@ const RoleSelector = () => {
           
           <div className="mt-4 p-4 bg-secondary rounded-lg">
             <div className="flex justify-between">
-              <span>Total roles selected:</span>
+              <span>{t('setup.totalRolesSelected')}:</span>
               <span className={selectedRoles.length !== gameState.players.length ? "text-red-400" : ""}>
                 {selectedRoles.length} / {gameState.players.length}
               </span>

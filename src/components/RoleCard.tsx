@@ -1,6 +1,7 @@
 
 import { ROLES } from "@/lib/game-data";
 import { PlayerRole } from "@/lib/types";
+import { useTranslation } from "react-i18next";
 
 interface RoleCardProps {
   role: PlayerRole;
@@ -10,6 +11,7 @@ interface RoleCardProps {
 }
 
 const RoleCard = ({ role, count, selected, onClick }: RoleCardProps) => {
+  const { t } = useTranslation();
   const roleData = ROLES[role];
 
   return (
@@ -23,7 +25,7 @@ const RoleCard = ({ role, count, selected, onClick }: RoleCardProps) => {
       <div className="moon-glow" />
       
       <div className="flex items-start justify-between">
-        <h3 className="role-title">{roleData.name}</h3>
+        <h3 className="role-title">{t(`roles.${role}.name`)}</h3>
         {count !== undefined && (
           <span className="bg-moonlight/30 text-white px-2 py-1 rounded-full text-xs">
             ×{count}
@@ -31,18 +33,18 @@ const RoleCard = ({ role, count, selected, onClick }: RoleCardProps) => {
         )}
       </div>
       
-      <p className="role-description">{roleData.description}</p>
+      <p className="role-description">{t(`roles.${role}.description`)}</p>
       
       {roleData.nightAction && (
         <div className="mt-2 text-xs text-moonlight-light italic">
-          Night action: {roleData.nightAction}
+          {t('common.nightAction')}: {roleData.nightAction}
         </div>
       )}
       
       <div className={`mt-2 text-xs inline-block px-2 py-1 rounded-full ${
         roleData.team === 'village' ? 'bg-blue-900/30 text-blue-300' : 'bg-werewolf/30 text-red-300'
       }`}>
-        Team: {roleData.team === 'village' ? 'Village' : 'Werewolves'}
+        {t('common.team')}: {roleData.team === 'village' ? t('common.village') : t('common.werewolves')}
       </div>
     </div>
   );

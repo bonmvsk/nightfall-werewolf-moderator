@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";
@@ -9,8 +10,10 @@ import { PlayerRole } from "@/lib/types";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const RoleReveal = () => {
+  const { t } = useTranslation();
   const { gameState, updatePlayerRole, startNightPhase } = useGame();
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
@@ -19,7 +22,7 @@ const RoleReveal = () => {
   
   const handleRoleView = (playerId: string) => {
     if (revealedPlayers.has(playerId)) {
-      toast.error("You've already viewed this role");
+      toast.error(t('roleReveal.alreadyViewed'));
       return;
     }
     
@@ -35,7 +38,7 @@ const RoleReveal = () => {
   const handleCardModeRoleSelect = (playerId: string, role: PlayerRole) => {
     updatePlayerRole(playerId, role);
     setRevealedPlayers(prev => new Set([...prev, playerId]));
-    toast.success("Role has been set");
+    toast.success(t('roleReveal.roleSet'));
   };
   
   const allPlayersRevealed = gameState.players.every(player => 
@@ -45,7 +48,7 @@ const RoleReveal = () => {
   const handleStartGame = () => {
     startNightPhase();
     navigate("/");
-    toast.success("The game begins!");
+    toast.success(t('roleReveal.gameBegins'));
   };
   
   const selectedPlayer = selectedPlayerId ? 
@@ -75,18 +78,22 @@ const RoleReveal = () => {
   return (
     <div className="container mx-auto px-4 max-w-4xl py-8 animate-fade-in">
       <h1 className="text-3xl md:text-4xl font-bold text-center mb-6 text-moonlight-light">
-        {gameState.gameMode === 'system' ? 'View Your Assigned Role' : 'Select Your Role Card'}
+        {gameState.gameMode === 'system' 
+          ? t('roleReveal.viewAssignedRole') 
+          : t('roleReveal.selectRoleCard')}
       </h1>
       
       <Card className="mb-8 shadow-lg">
         <CardHeader>
           <CardTitle>
-            {gameState.gameMode === 'system' ? 'Role Reveal' : 'Role Selection'}
+            {gameState.gameMode === 'system' 
+              ? t('roleReveal.roleReveal') 
+              : t('roleReveal.roleSelection')}
           </CardTitle>
           <CardDescription>
             {gameState.gameMode === 'system' 
-              ? 'Each player should secretly view their assigned role.' 
-              : 'Each player should select the role from their physical card.'}
+              ? t('roleReveal.secretlyViewRole') 
+              : t('roleReveal.selectRoleFromCard')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -99,7 +106,9 @@ const RoleReveal = () => {
                     {revealedPlayers.has(player.id) && (
                       <p className="text-sm text-green-500 flex items-center gap-1 mt-1">
                         <CheckCheck className="h-4 w-4" />
-                        {gameState.gameMode === 'system' ? 'Viewed' : 'Role selected'}
+                        {gameState.gameMode === 'system' 
+                          ? t('roleReveal.viewed') 
+                          : t('roleReveal.roleSelected')}
                       </p>
                     )}
                   </div>
@@ -114,29 +123,29 @@ const RoleReveal = () => {
                       {revealedPlayers.has(player.id) ? (
                         <>
                           <CheckCheck className="h-4 w-4" />
-                          <span>Viewed</span>
+                          <span>{t('roleReveal.viewed')}</span>
                         </>
                       ) : (
                         <>
                           <Eye className="h-4 w-4" />
-                          <span>View Role</span>
+                          <span>{t('roleReveal.viewRole')}</span>
                         </>
                       )}
                     </Button>
                   ) : (
                     revealedPlayers.has(player.id) ? (
                       <div className="text-sm bg-primary/20 px-3 py-1 rounded-full">
-                        Role selected
+                        {t('roleReveal.roleSelected')}
                       </div>
                     ) : (
                       <Select onValueChange={(value) => handleCardModeRoleSelect(player.id, value as PlayerRole)}>
                         <SelectTrigger className="w-36">
-                          <SelectValue placeholder="Select Role" />
+                          <SelectValue placeholder={t('roleReveal.selectRole')} />
                         </SelectTrigger>
                         <SelectContent>
                           {getAvailableRoles().map(role => (
                             <SelectItem key={role} value={role}>
-                              {ROLES[role].name}
+                              {t(`roles.${role}.name`)}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -157,7 +166,9 @@ const RoleReveal = () => {
           size="lg"
           className="px-8 py-6 text-lg"
         >
-          {allPlayersRevealed ? "Start Game" : "Waiting for all players..."}
+          {allPlayersRevealed 
+            ? t('roleReveal.startGame') 
+            : t('roleReveal.waitingForPlayers')}
         </Button>
       </div>
       
@@ -169,7 +180,7 @@ const RoleReveal = () => {
       }}>
         <DialogContent className="bg-night border-moonlight/20 max-w-md">
           <DialogHeader>
-            <DialogTitle>{selectedPlayer?.name}'s Role</DialogTitle>
+            <DialogTitle>{selectedPlayer?.name}'s {t('common.role')}</DialogTitle>
           </DialogHeader>
           
           {selectedPlayer?.role && (
@@ -184,18 +195,18 @@ const RoleReveal = () => {
                 </div>
               </div>
               
-              <h2 className="text-2xl font-bold mb-2">{ROLES[selectedPlayer.role].name}</h2>
+              <h2 className="text-2xl font-bold mb-2">{t(`roles.${selectedPlayer.role}.name`)}</h2>
               <p className="text-center text-muted-foreground mb-4">
-                {ROLES[selectedPlayer.role].description}
+                {t(`roles.${selectedPlayer.role}.description`)}
               </p>
               
               <div className={`inline-block px-3 py-1 rounded-full text-sm
                 ${isWerewolf ? 'bg-werewolf/30 text-red-300' : 'bg-blue-900/30 text-blue-300'}`}>
-                Team: {isWerewolf ? 'Werewolves' : 'Village'}
+                {t('common.team')}: {isWerewolf ? t('common.werewolves') : t('common.village')}
               </div>
               
               <Button className="mt-6" onClick={() => setRoleDialogOpen(false)}>
-                I understand my role
+                {t('common.iUnderstandMyRole')}
               </Button>
             </div>
           )}

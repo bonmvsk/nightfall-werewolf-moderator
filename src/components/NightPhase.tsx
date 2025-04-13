@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";
@@ -8,8 +9,10 @@ import { ROLES, getNightActionOrder } from "@/lib/game-data";
 import { Moon, ArrowRight, Users, CheckCircle, XCircle, Sun } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Player } from "@/lib/types";
+import { useTranslation } from "react-i18next";
 
 const NightPhase = () => {
+  const { t } = useTranslation();
   const { gameState, performNightAction, completeNightPhase, startTimer, stopTimer } = useGame();
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
   const [activeRoles, setActiveRoles] = useState<string[]>([]);
@@ -142,15 +145,15 @@ const NightPhase = () => {
           <CardHeader>
             <CardTitle className="text-center flex items-center justify-center text-2xl">
               <Moon className="mr-2 h-6 w-6 text-moonlight" />
-              Night Phase
+              {t('night.title')}
             </CardTitle>
             <CardDescription className="text-center">
-              No roles have night actions. Proceeding to day phase...
+              {t('night.noRolesWithNightActions')}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center py-6">
             <Button onClick={completeNightPhase} size="lg">
-              Continue to Day Phase
+              {t('night.proceedToDay')}
             </Button>
           </CardContent>
         </Card>
@@ -165,10 +168,10 @@ const NightPhase = () => {
           <CardHeader>
             <CardTitle className="text-center flex items-center justify-center text-2xl">
               <Moon className="mr-2 h-6 w-6 text-moonlight" />
-              Night Phase Complete
+              {t('night.nightComplete')}
             </CardTitle>
             <CardDescription className="text-center">
-              All night actions have been completed. Dawn approaches...
+              {t('night.allActionsCompleted')}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center py-6">
@@ -178,7 +181,7 @@ const NightPhase = () => {
               className="flex items-center gap-2"
             >
               <Sun className="h-5 w-5" />
-              Proceed to Day Phase
+              {t('night.proceedToDay')}
             </Button>
           </CardContent>
         </Card>
@@ -191,7 +194,7 @@ const NightPhase = () => {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold flex items-center">
           <Moon className="mr-2 h-8 w-8 text-moonlight animate-pulse-slow" />
-          Night Phase
+          {t('night.title')}
         </h1>
         <div className="flex items-center gap-4">
           <GameTimer phase="night" />
@@ -201,13 +204,13 @@ const NightPhase = () => {
       <Card className="bg-night border-moonlight/20 mb-8">
         <CardHeader>
           <CardTitle>
-            {currentRoleData?.name || "Unknown Role"}'s Turn
+            {t('night.wakeUpMessage', { role: currentRoleData?.name || t('common.unknownRole') })}
           </CardTitle>
           <CardDescription>
-            {currentRoleData?.nightAction || "This role has no night action."}
+            {currentRoleData?.nightAction || t('night.noNightAction')}
             {activeRoles[currentRoleIndex] === 'seer' && seerResult.actionTaken && (
               <span className="text-yellow-400 block mt-1">
-                You have already used your ability this night.
+                {t('night.alreadyUsedAbility')}
               </span>
             )}
           </CardDescription>
@@ -215,7 +218,7 @@ const NightPhase = () => {
         <CardContent>
           <div className="mb-6 flex justify-between items-center">
             <span className="text-sm">
-              Step {currentRoleIndex + 1} of {activeRoles.length}
+              {t('night.stepProgress', { current: currentRoleIndex + 1, total: activeRoles.length })}
             </span>
             
             <div className="flex items-center space-x-2">
@@ -236,20 +239,20 @@ const NightPhase = () => {
           
           {activeRoles[currentRoleIndex] === 'seer' && seerResult.shown && (
             <div className="mb-6 p-4 rounded-lg border border-moonlight/30 bg-night-dark">
-              <h3 className="text-lg font-semibold mb-2">Seer Result:</h3>
+              <h3 className="text-lg font-semibold mb-2">{t('night.seerResult')}:</h3>
               <div className="flex items-center justify-center py-4">
                 {seerResult.isGood ? (
                   <div className="flex flex-col items-center">
                     <CheckCircle className="h-12 w-12 text-green-500 mb-2" />
                     <p className="text-center">
-                      <span className="font-bold">{seerResult.playerName}</span> is <span className="text-green-500 font-bold">Good</span> (Village Team)
+                      <span className="font-bold">{seerResult.playerName}</span> {t('night.isGood')}
                     </p>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center">
                     <XCircle className="h-12 w-12 text-red-500 mb-2" />
                     <p className="text-center">
-                      <span className="font-bold">{seerResult.playerName}</span> is <span className="text-red-500 font-bold">Bad</span> (Werewolf Team)
+                      <span className="font-bold">{seerResult.playerName}</span> {t('night.isBad')}
                     </p>
                   </div>
                 )}
@@ -259,7 +262,7 @@ const NightPhase = () => {
           
           {currentRolePlayers.length > 0 && (
             <>
-              <h3 className="text-lg font-semibold mb-3">Select a target:</h3>
+              <h3 className="text-lg font-semibold mb-3">{t('night.selectTarget')}:</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                 {gameState.players
                   .filter(p => p.status === 'alive')
@@ -285,7 +288,7 @@ const NightPhase = () => {
               variant="secondary"
               onClick={handleSkipRole}
             >
-              Skip
+              {t('common.skip')}
             </Button>
             
             <Button 
@@ -293,7 +296,7 @@ const NightPhase = () => {
               disabled={(!selectedPlayer && currentRolePlayers.length > 0) || (activeRoles[currentRoleIndex] === 'seer' && !selectedPlayer)}
               className="flex items-center"
             >
-              Continue <ArrowRight className="ml-1 h-4 w-4" />
+              {t('common.continue')} <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
         </CardContent>
@@ -302,7 +305,7 @@ const NightPhase = () => {
       <Dialog open={showAllPlayersDialog} onOpenChange={setShowAllPlayersDialog}>
         <DialogContent className="bg-night border-moonlight/20 max-w-2xl">
           <DialogHeader>
-            <DialogTitle>All Active Players</DialogTitle>
+            <DialogTitle>{t('night.allActivePlayers')}</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto p-2">
             {gameState.players
@@ -329,7 +332,7 @@ const NightPhase = () => {
       >
         <DialogContent className="bg-night border-moonlight/20 max-w-md">
           <DialogHeader>
-            <DialogTitle>{playerRoleDialog.player?.name}'s Role</DialogTitle>
+            <DialogTitle>{playerRoleDialog.player?.name}'s {t('common.role')}</DialogTitle>
           </DialogHeader>
           
           {playerRoleDialog.player?.role && (
@@ -345,19 +348,19 @@ const NightPhase = () => {
               </div>
               
               <h2 className="text-2xl font-bold mb-2">
-                {ROLES[playerRoleDialog.player.role].name}
+                {t(`roles.${playerRoleDialog.player.role}.name`)}
               </h2>
               <p className="text-center text-muted-foreground mb-4">
-                {ROLES[playerRoleDialog.player.role].description}
+                {t(`roles.${playerRoleDialog.player.role}.description`)}
               </p>
               
               <div className={`inline-block px-3 py-1 rounded-full text-sm
                 ${playerRoleDialog.player.role === 'werewolf' ? 'bg-werewolf/30 text-red-300' : 'bg-blue-900/30 text-blue-300'}`}>
-                Team: {ROLES[playerRoleDialog.player.role].team === 'werewolves' ? 'Werewolves' : 'Village'}
+                {t('common.team')}: {ROLES[playerRoleDialog.player.role].team === 'werewolves' ? t('common.werewolves') : t('common.village')}
               </div>
               
               <Button className="mt-6" onClick={() => setPlayerRoleDialog({ open: false, player: null })}>
-                Close
+                {t('common.close')}
               </Button>
             </div>
           )}

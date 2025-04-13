@@ -25,7 +25,18 @@
     "gameOver": "เกมจบแล้ว",
     "playAgain": "เล่นอีกครั้ง",
     "survives": "รอดชีวิต",
-    "dies": "เสียชีวิต"
+    "dies": "เสียชีวิต",
+    "role": "บทบาท",
+    "team": "ทีม",
+    "continue": "ดำเนินการต่อ",
+    "skip": "ข้าม",
+    "close": "ปิด",
+    "apply": "นำไปใช้",
+    "cancel": "ยกเลิก",
+    "iUnderstandMyRole": "ฉันเข้าใจบทบาทของฉัน",
+    "eliminate": "กำจัด",
+    "nightAction": "การกระทำในช่วงกลางคืน",
+    "unknownRole": "บทบาทที่ไม่รู้จัก"
   },
   "setup": {
     "title": "ตั้งค่าเกมหมาป่า",
@@ -41,7 +52,10 @@
     "roleDistribution": "การกระจายบทบาท",
     "startGame": "เริ่มเกม",
     "needMorePlayers": "คุณต้องมีผู้เล่นอย่างน้อย 5 คนเพื่อเริ่มเกม",
-    "rolesMismatch": "คุณต้องเลือกบทบาทให้ครบ {{count}} บทบาทตามจำนวนผู้เล่น ปัจจุบันเลือก: {{selected}}"
+    "rolesMismatch": "คุณต้องเลือกบทบาทให้ครบ {{count}} บทบาทตามจำนวนผู้เล่น ปัจจุบันเลือก: {{selected}}",
+    "customizeRoles": "ปรับแต่งบทบาท",
+    "customizeRolesDescription": "คลิกที่บทบาทเพื่อเพิ่มหรือลบ จำนวนบทบาททั้งหมดต้องตรงกับจำนวนผู้เล่น ({{playerCount}})",
+    "totalRolesSelected": "บทบาทที่เลือกทั้งหมด"
   },
   "roles": {
     "werewolf": {
@@ -88,7 +102,22 @@
     "yourRoleIs": "บทบาทของคุณคือ",
     "keepSecretInstruction": "เก็บข้อมูลนี้เป็นความลับ!",
     "allRevealed": "ผู้เล่นทุกคนได้เห็นบทบาทของตนแล้ว!",
-    "proceedToNight": "ไปที่ช่วงกลางคืน"
+    "proceedToNight": "ไปที่ช่วงกลางคืน",
+    "viewAssignedRole": "ดูบทบาทที่ได้รับ",
+    "selectRoleCard": "เลือกการ์ดบทบาทของคุณ",
+    "roleReveal": "เปิดเผยบทบาท",
+    "roleSelection": "เลือกบทบาท",
+    "secretlyViewRole": "ผู้เล่นแต่ละคนควรดูบทบาทที่ได้รับเป็นความลับ",
+    "selectRoleFromCard": "ผู้เล่นแต่ละคนควรเลือกบทบาทจากการ์ดที่จั่วได้",
+    "viewed": "ดูแล้ว",
+    "roleSelected": "เลือกบทบาทแล้ว",
+    "viewRole": "ดูบทบาท",
+    "selectRole": "เลือกบทบาท",
+    "startGame": "เริ่มเกม",
+    "waitingForPlayers": "รอผู้เล่นทั้งหมด...",
+    "alreadyViewed": "คุณได้ดูบทบาทนี้ไปแล้ว",
+    "roleSet": "ตั้งค่าบทบาทแล้ว",
+    "gameBegins": "เกมเริ่มต้นแล้ว!"
   },
   "night": {
     "title": "ช่วงกลางคืน",
@@ -96,7 +125,18 @@
     "action": "เลือกผู้เล่นที่จะ{{action}}:",
     "confirmAction": "ยืนยัน{{action}}",
     "nightSummary": "สรุปช่วงกลางคืน",
-    "proceedToDay": "ไปที่ช่วงกลางวัน"
+    "proceedToDay": "ไปที่ช่วงกลางวัน",
+    "noRolesWithNightActions": "ไม่มีบทบาทที่มีการกระทำในเวลากลางคืน กำลังดำเนินการไปยังช่วงกลางวัน...",
+    "nightComplete": "ช่วงกลางคืนเสร็จสิ้น",
+    "allActionsCompleted": "การกระทำในช่วงกลางคืนทั้งหมดเสร็จสิ้นแล้ว รุ่งอรุณกำลังมา...",
+    "noNightAction": "บทบาทนี้ไม่มีการกระทำในช่วงกลางคืน",
+    "alreadyUsedAbility": "คุณได้ใช้ความสามารถของคุณในคืนนี้ไปแล้ว",
+    "stepProgress": "ขั้นตอน {{current}} จาก {{total}}",
+    "seerResult": "ผลลัพธ์ของผู้หยั่งรู้",
+    "isGood": "เป็นฝ่ายดี (ทีมชาวบ้าน)",
+    "isBad": "เป็นฝ่ายร้าย (ทีมหมาป่า)",
+    "selectTarget": "เลือกเป้าหมาย",
+    "allActivePlayers": "ผู้เล่นที่ยังมีชีวิตอยู่ทั้งหมด"
   },
   "day": {
     "title": "ช่วงกลางวัน",
