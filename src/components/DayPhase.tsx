@@ -38,12 +38,14 @@ const DayPhase = () => {
   
   return (
     <div className="container mx-auto px-4 max-w-4xl py-8 animate-fade-in">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex md:flex-col justify-between items-center mb-8">
         <h1 className="text-3xl font-bold flex items-center">
-          <Sun className="mr-2 h-8 w-8 text-yellow-500" />
+          <Moon className="mr-2 h-8 w-8 text-moonlight animate-pulse-slow" />
           Day Phase
         </h1>
-        <GameTimer phase="day" />
+        <div className="flex items-center gap-4">
+          <GameTimer phase="night" />
+        </div>
       </div>
       
       {gameState.eliminatedLastNight.length > 0 ? (
