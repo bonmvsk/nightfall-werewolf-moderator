@@ -32,7 +32,7 @@ const GameBackground = () => {
   const { gameState } = useGame();
   
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pt-4">
       {/* Phase indicator */}
       {gameState.gamePhase !== 'setup' && gameState.gamePhase !== 'result' && gameState.gamePhase !== 'role-reveal' && (
         <div className="fixed top-4 right-4 bg-black/40 backdrop-blur-sm p-2 rounded-full">
