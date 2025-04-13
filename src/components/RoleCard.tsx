@@ -16,6 +16,9 @@ const RoleCard = ({ role, count, selected, onClick }: RoleCardProps) => {
     <div 
       className={`role-card ${selected ? 'ring-2 ring-primary/70' : ''}`}
       onClick={onClick}
+      data-role-selected={selected ? "true" : "false"}
+      data-role-count={count}
+      data-role-name={role}
     >
       <div className="moon-glow" />
       

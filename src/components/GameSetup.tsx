@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useGame } from "@/contexts/GameContext";
@@ -32,13 +31,12 @@ const GameSetup = () => {
     
     // For system mode, check if selected roles match player count
     if (gameState.gameMode === 'system') {
-      // Count how many roles are actually selected
-      // Get data-role-selected elements (RoleCard components with selected prop)
-      const selectedRolesElements = document.querySelectorAll('[data-role-selected="true"]');
+      // Get all selected roles from the DOM and count their quantities
+      const selectedRoleElements = document.querySelectorAll('[data-role-selected="true"]');
       
-      // Get the total count by summing the data-role-count attributes
+      // Calculate total selected roles by summing all role counts
       let totalRolesCount = 0;
-      selectedRolesElements.forEach(element => {
+      selectedRoleElements.forEach(element => {
         const countStr = element.getAttribute('data-role-count');
         if (countStr) {
           totalRolesCount += parseInt(countStr, 10);

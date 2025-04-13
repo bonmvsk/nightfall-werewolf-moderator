@@ -35,25 +35,13 @@ const RoleSelector = () => {
     if (!isCustomizing) return;
     
     setSelectedRoles(prev => {
-      // If removing a role would make the total less than player count, add a villager
-      if (prev.includes(role)) {
-        // Check how many of this role we have
-        const roleCount = prev.filter(r => r === role).length;
-        if (roleCount > 1) {
-          // If we have multiple, just remove one
-          const newRoles = [...prev];
-          const roleIndex = newRoles.indexOf(role);
-          if (roleIndex !== -1) {
-            newRoles.splice(roleIndex, 1);
-            // Add a villager to maintain count
-            if (newRoles.length < gameState.players.length) {
-              newRoles.push('villager');
-            }
-            return newRoles;
-          }
-        } else {
-          // If we have just one, remove it
-          const newRoles = prev.filter(r => r !== role);
+      // If removing a role
+      if (selectedRoleCounts[role] && selectedRoleCounts[role] > 0) {
+        // Remove one instance of the role
+        const newRoles = [...prev];
+        const roleIndex = newRoles.indexOf(role);
+        if (roleIndex !== -1) {
+          newRoles.splice(roleIndex, 1);
           // Add a villager to maintain count
           if (newRoles.length < gameState.players.length) {
             newRoles.push('villager');
@@ -62,28 +50,25 @@ const RoleSelector = () => {
         }
       }
       
-      // If adding a role would make the total more than player count, remove a villager
-      if (!prev.includes(role) || prev.filter(r => r === role).length < selectedRoleCounts[role]) {
-        if (prev.length >= gameState.players.length) {
-          const villagerIndex = prev.indexOf('villager');
-          if (villagerIndex !== -1) {
-            const newRoles = [...prev];
-            newRoles.splice(villagerIndex, 1);
-            newRoles.push(role);
-            return newRoles;
-          }
-          // If no villagers to remove, try to keep the count the same
+      // If adding a role
+      if (prev.length >= gameState.players.length) {
+        // Remove a villager if possible to make room for the new role
+        const villagerIndex = prev.indexOf('villager');
+        if (villagerIndex !== -1) {
           const newRoles = [...prev];
-          newRoles.pop(); // Remove the last role
+          newRoles.splice(villagerIndex, 1);
           newRoles.push(role);
           return newRoles;
-        } else {
-          // Just add the role
-          return [...prev, role];
         }
+        // If no villagers to remove, try to keep the count the same
+        const newRoles = [...prev];
+        newRoles.pop(); // Remove the last role
+        newRoles.push(role);
+        return newRoles;
+      } else {
+        // Just add the role if we have room
+        return [...prev, role];
       }
-      
-      return prev;
     });
   };
   
@@ -111,6 +96,9 @@ const RoleSelector = () => {
     }
     
     setSelectedRoles(adjustedRoles);
+    
+    // Update recommendedRoleCounts with the adjusted roles
+    const updatedRoleCounts = countRoles(adjustedRoles);
     
     // Apply the selected roles
     setCustomRoles(adjustedRoles);
@@ -171,8 +159,8 @@ const RoleSelector = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {Object.entries(recommendedRoleCounts).map(([role, count]) => (
-            <RoleCard key={role} role={role as PlayerRole} count={count} />
+          {Object.entries(selectedRoleCounts).map(([role, count]) => (
+            <RoleCard key={role} role={role as PlayerRole} count={count} selected={true} />
           ))}
         </div>
       )}
