@@ -56,12 +56,6 @@ const PlayerCard = ({
           </div>
         )}
         
-        {player.protected && (
-          <div className="absolute top-0 left-0 m-2">
-            <Shield className="h-5 w-5 text-blue-400" />
-          </div>
-        )}
-        
         <div className="flex items-center space-x-3">
           <div className="flex-shrink-0 w-12 h-12 bg-secondary rounded-full flex items-center justify-center">
             <UserIcon className="h-8 w-8 text-primary" />

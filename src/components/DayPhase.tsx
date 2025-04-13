@@ -90,20 +90,6 @@ const DayPhase = () => {
           </AlertDescription>
         </Alert>
       )}
-
-     // {someoneWasProtected && (
-     //   <Alert className="mb-4 bg-blue-900/20 border-blue-700/30 text-blue-300">
-      //    <ShieldAlert className="h-4 w-4" />
-       //   <AlertTitle>Protection Results</AlertTitle>
-       //   <AlertDescription>
-         //   {protectedPlayers.map((player, index) => (
-           //   <div key={player.id}>
-         //       <span className="font-bold">{player.name}</span> was protected from elimination!
-         //     </div>
-        //    ))}
-        //  </AlertDescription>
-       // </Alert>
-     // )}
       
       <Card className="bg-night border-moonlight/20 mb-8">
         <CardHeader>
