@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import PlayerCard from "./PlayerCard";
 import GameTimer from "./GameTimer";
 import { ROLES, getNightActionOrder } from "@/lib/game-data";
-import { Moon, ArrowRight, Users } from "lucide-react";
+import { Moon, ArrowRight, Users, CheckCircle, XCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Player } from "@/lib/types";
 
@@ -19,6 +19,11 @@ const NightPhase = () => {
   const [playerRoleDialog, setPlayerRoleDialog] = useState<{open: boolean, player: Player | null}>({
     open: false,
     player: null
+  });
+  const [seerResult, setSeerResult] = useState<{shown: boolean, isGood: boolean | null, playerName: string}>({
+    shown: false,
+    isGood: null,
+    playerName: ""
   });
   
   // Find players with the current night role
@@ -50,6 +55,25 @@ const NightPhase = () => {
   
   const handleSelectPlayer = (playerId: string) => {
     setSelectedPlayer(playerId);
+    
+    // If the current role is seer, show the result of their ability
+    if (activeRoles[currentRoleIndex] === 'seer') {
+      const selectedPlayerData = gameState.players.find(p => p.id === playerId);
+      if (selectedPlayerData) {
+        // Check if player is good (village team) or bad (werewolf team)
+        const playerRole = selectedPlayerData.role;
+        const isGood = playerRole ? ROLES[playerRole].team === 'village' : true; // Default to village if no role
+        
+        setSeerResult({
+          shown: true,
+          isGood,
+          playerName: selectedPlayerData.name
+        });
+      }
+    } else {
+      // Reset seer result for other roles
+      setSeerResult({ shown: false, isGood: null, playerName: "" });
+    }
   };
   
   const handleConfirmAction = () => {
@@ -84,6 +108,9 @@ const NightPhase = () => {
       actionType
     });
     
+    // Reset seer result
+    setSeerResult({ shown: false, isGood: null, playerName: "" });
+    
     // Move to next role or complete if last
     if (currentRoleIndex < activeRoles.length - 1) {
       setCurrentRoleIndex(currentRoleIndex + 1);
@@ -97,6 +124,8 @@ const NightPhase = () => {
   
   const handleSkipRole = () => {
     // Move to next role without performing action
+    setSeerResult({ shown: false, isGood: null, playerName: "" });
+    
     if (currentRoleIndex < activeRoles.length - 1) {
       setCurrentRoleIndex(currentRoleIndex + 1);
       setSelectedPlayer(null);
@@ -181,26 +210,30 @@ const NightPhase = () => {
             </div>
           </div>
           
-          {currentRolePlayers.length > 0 ? (
-            <div className="mb-6">
-              <p className="text-sm mb-2">
-                Players with this role:
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {currentRolePlayers.map(player => (
-                  <span 
-                    key={player.id} 
-                    className="px-2 py-1 bg-secondary rounded-lg text-sm"
-                  >
-                    {player.name}
-                  </span>
-                ))}
+          {/* The "Players with this role" section is now hidden */}
+          
+          {/* Display Seer's result when a player is selected */}
+          {activeRoles[currentRoleIndex] === 'seer' && seerResult.shown && (
+            <div className="mb-6 p-4 rounded-lg border border-moonlight/30 bg-night-dark">
+              <h3 className="text-lg font-semibold mb-2">Seer Result:</h3>
+              <div className="flex items-center justify-center py-4">
+                {seerResult.isGood ? (
+                  <div className="flex flex-col items-center">
+                    <CheckCircle className="h-12 w-12 text-green-500 mb-2" />
+                    <p className="text-center">
+                      <span className="font-bold">{seerResult.playerName}</span> is <span className="text-green-500 font-bold">คนดี</span> (Village Team)
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <XCircle className="h-12 w-12 text-red-500 mb-2" />
+                    <p className="text-center">
+                      <span className="font-bold">{seerResult.playerName}</span> is <span className="text-red-500 font-bold">คนไม่ดี</span> (Werewolf Team)
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
-          ) : (
-            <p className="text-sm mb-6">
-              No players with this role are alive.
-            </p>
           )}
           
           {currentRolePlayers.length > 0 && (
