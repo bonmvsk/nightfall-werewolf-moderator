@@ -3,19 +3,20 @@ import { useState, useEffect } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Eye, CheckCheck, XCircle } from "lucide-react";
+import { Eye, CheckCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ROLES } from "@/lib/game-data";
 import { PlayerRole } from "@/lib/types";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
 
 const RoleReveal = () => {
   const { gameState, updatePlayerRole, startNightPhase } = useGame();
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<PlayerRole | null>(null);
   const [revealedPlayers, setRevealedPlayers] = useState<Set<string>>(new Set());
+  const navigate = useNavigate();
   
   const handleRoleView = (playerId: string) => {
     if (revealedPlayers.has(playerId)) {
@@ -41,6 +42,23 @@ const RoleReveal = () => {
   const allPlayersRevealed = gameState.players.every(player => 
     revealedPlayers.has(player.id)
   );
+  
+  // When all players have revealed their roles, automatically redirect to game
+  useEffect(() => {
+    if (allPlayersRevealed && revealedPlayers.size > 0) {
+      const timer = setTimeout(() => {
+        handleStartGame();
+      }, 1500); // Small delay to allow user to see that all roles are ready
+      
+      return () => clearTimeout(timer);
+    }
+  }, [allPlayersRevealed, revealedPlayers.size]);
+  
+  const handleStartGame = () => {
+    startNightPhase();
+    navigate("/");
+    toast.success("The game begins!");
+  };
   
   const selectedPlayer = selectedPlayerId ? 
     gameState.players.find(p => p.id === selectedPlayerId) : null;
@@ -152,7 +170,7 @@ const RoleReveal = () => {
       
       <div className="flex justify-center mt-8">
         <Button
-          onClick={startNightPhase}
+          onClick={handleStartGame}
           disabled={!allPlayersRevealed}
           size="lg"
           className="px-8 py-6 text-lg"
