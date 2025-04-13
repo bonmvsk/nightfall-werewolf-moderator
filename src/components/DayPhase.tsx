@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";
@@ -6,28 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import PlayerCard from "./PlayerCard";
 import GameTimer from "./GameTimer";
-import { Sun, AlertCircle, Moon, ShieldAlert, Flask } from "lucide-react";
+import { Sun, AlertCircle, Moon, ShieldAlert, Beaker } from "lucide-react";
 
 const DayPhase = () => {
   const { gameState, eliminatePlayer, startNightPhase, startTimer } = useGame();
   
-  // Start day timer
   useEffect(() => {
     startTimer('day');
   }, []);
   
-  // Find witch actions if any
   const witchActions = gameState.nightActions.filter(action => 
     action.roleId === 'witch' && action.actionType === 'poison'
   );
 
-  // Find protection actions
   const protectionActions = gameState.nightActions.filter(action => 
     (action.roleId === 'bodyguard' && action.actionType === 'protect') || 
     (action.roleId === 'doctor' && action.actionType === 'heal')
   );
 
-  // Find protected players who survived werewolf attacks
   const protectedPlayers = gameState.players.filter(player => 
     player.status === 'alive' && 
     player.protected && 
@@ -68,10 +63,9 @@ const DayPhase = () => {
         </Alert>
       )}
 
-      {/* Show Witch's poison actions */}
       {witchActions.length > 0 && (
         <Alert className="mb-4 bg-purple-900/20 border-purple-700/30 text-purple-300">
-          <Flask className="h-4 w-4" />
+          <Beaker className="h-4 w-4" />
           <AlertTitle>Witch's Actions</AlertTitle>
           <AlertDescription>
             The Witch used a poison potion on{' '}
@@ -82,7 +76,6 @@ const DayPhase = () => {
         </Alert>
       )}
 
-      {/* Show protection results */}
       {protectedPlayers.length > 0 && (
         <Alert className="mb-4 bg-blue-900/20 border-blue-700/30 text-blue-300">
           <ShieldAlert className="h-4 w-4" />
