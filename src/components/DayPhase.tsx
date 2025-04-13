@@ -7,9 +7,11 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import PlayerCard from "./PlayerCard";
 import GameTimer from "./GameTimer";
 import { Sun, AlertCircle, Moon, ShieldAlert, Beaker, VolumeX } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const DayPhase = () => {
   const { gameState, eliminatePlayer, startNightPhase, startTimer } = useGame();
+  const { t } = useTranslation();
   
   useEffect(() => {
     startTimer('day');
@@ -45,7 +47,7 @@ const DayPhase = () => {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold flex items-center">
           <Sun className="mr-2 h-8 w-8 text-moonlight animate-pulse-slow" />
-          Day Phase
+          {t('day.title')}
         </h1>
         <div className="flex items-center gap-4">
           <GameTimer phase="day" />
@@ -55,31 +57,26 @@ const DayPhase = () => {
       {gameState.eliminatedLastNight.length > 0 ? (
         <Alert className="mb-4 bg-werewolf/20 border-werewolf/30 text-red-300">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Night Results</AlertTitle>
+          <AlertTitle>{t('day.nightResults')}</AlertTitle>
           <AlertDescription>
             {gameState.eliminatedLastNight.length === 1 
-              ? <>
-                  <span className="font-bold">
-                    {gameState.players.find(p => p.id === gameState.eliminatedLastNight[0])?.name}
-                  </span> was eliminated during the night.
-                </>
-              : <>
-                  The following players were eliminated during the night: {' '}
-                  {gameState.eliminatedLastNight.map(id => (
-                    <span key={id} className="font-bold">{gameState.players.find(p => p.id === id)?.name}</span>
-                  )).reduce((prev, curr, i) => (
-                    i === 0 ? curr : <>{prev}, {curr}</>
-                  ))}
-                </>
+              ? t('day.playerEliminated', { 
+                  player: gameState.players.find(p => p.id === gameState.eliminatedLastNight[0])?.name 
+                })
+              : t('day.playersEliminated', { 
+                  players: gameState.eliminatedLastNight.map(id => (
+                    gameState.players.find(p => p.id === id)?.name
+                  )).join(', ')
+                })
             }
           </AlertDescription>
         </Alert>
       ) : (
         <Alert className="mb-4 bg-blue-900/20 border-blue-700/30 text-blue-300">
           <ShieldAlert className="h-4 w-4" />
-          <AlertTitle>Night Results</AlertTitle>
+          <AlertTitle>{t('day.nightResults')}</AlertTitle>
           <AlertDescription>
-            No one was eliminated tonight.
+            {t('day.noOneEliminated')}
           </AlertDescription>
         </Alert>
       )}
@@ -87,12 +84,11 @@ const DayPhase = () => {
       {witchActions.length > 0 && (
         <Alert className="mb-4 bg-purple-900/20 border-purple-700/30 text-purple-300">
           <Beaker className="h-4 w-4" />
-          <AlertTitle>Witch's Actions</AlertTitle>
+          <AlertTitle>{t('roles.witch.name')}</AlertTitle>
           <AlertDescription>
-            The Witch used a poison potion on{' '}
-            <span className="font-bold">
-              {gameState.players.find(p => p.id === witchActions[0].targetId)?.name}
-            </span>
+            {t('day.witchPoison', {
+              player: gameState.players.find(p => p.id === witchActions[0].targetId)?.name
+            })}
           </AlertDescription>
         </Alert>
       )}
@@ -100,21 +96,20 @@ const DayPhase = () => {
       {spellcasterActions.length > 0 && (
         <Alert className="mb-4 bg-indigo-900/20 border-indigo-700/30 text-indigo-300">
           <VolumeX className="h-4 w-4" />
-          <AlertTitle>Spellcaster's Actions</AlertTitle>
+          <AlertTitle>{t('roles.spellcaster.name')}</AlertTitle>
           <AlertDescription>
-            The Spellcaster has silenced{' '}
-            <span className="font-bold">
-              {gameState.players.find(p => p.id === spellcasterActions[0].targetId)?.name}
-            </span>. They cannot vote or participate in discussions today.
+            {t('day.spellcasterSilence', {
+              player: gameState.players.find(p => p.id === spellcasterActions[0].targetId)?.name
+            })}
           </AlertDescription>
         </Alert>
       )}
       
       <Card className="bg-night border-moonlight/20 mb-8">
         <CardHeader>
-          <CardTitle>Village Discussion</CardTitle>
+          <CardTitle>{t('day.villageDiscussion')}</CardTitle>
           <CardDescription>
-            The village must decide who to eliminate. Discuss and then vote.
+            {t('day.discussionDescription')}
           </CardDescription>
         </CardHeader>
         
@@ -138,7 +133,7 @@ const DayPhase = () => {
             className="flex items-center"
           >
             <Moon className="mr-2 h-4 w-4" />
-            Proceed to Night Phase
+            {t('day.proceedToNight')}
           </Button>
         </CardFooter>
       </Card>

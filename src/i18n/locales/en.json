@@ -1,0 +1,132 @@
+
+{
+  "common": {
+    "day": "Day",
+    "night": "Night",
+    "phase": "Phase",
+    "timer": "Timer",
+    "edit": "Edit",
+    "save": "Save",
+    "start": "Start",
+    "pause": "Pause",
+    "reset": "Reset",
+    "alive": "Alive",
+    "eliminated": "Eliminated",
+    "silenced": "Silenced",
+    "protected": "Protected",
+    "reveal": "Reveal",
+    "players": "Players",
+    "roles": "Roles",
+    "village": "Village",
+    "werewolves": "Werewolves",
+    "add": "Add",
+    "remove": "Remove",
+    "proceed": "Proceed",
+    "gameOver": "Game Over",
+    "playAgain": "Play Again",
+    "survives": "Survives",
+    "dies": "Dies"
+  },
+  "setup": {
+    "title": "Werewolf Game Setup",
+    "addPlayers": "Add Players",
+    "playerName": "Enter player name",
+    "playersList": "Players List",
+    "gameSettings": "Game Settings",
+    "gameMode": "Game Mode",
+    "systemMode": "System Random Assignment",
+    "systemDescription": "The system will randomly assign roles to each player. Each player can view their role privately.",
+    "cardsMode": "Player-drawn Cards",
+    "cardsDescription": "The system will only show which roles are in play. Players use physical cards to determine roles.",
+    "roleDistribution": "Role Distribution",
+    "startGame": "Start Game",
+    "needMorePlayers": "You need at least 5 players to start the game",
+    "rolesMismatch": "You need exactly {{count}} roles selected to match the player count. Currently selected: {{selected}}"
+  },
+  "roles": {
+    "werewolf": {
+      "name": "Werewolf",
+      "description": "Each night, werewolves vote to kill one villager. Werewolves win when they equal or outnumber the villagers."
+    },
+    "villager": {
+      "name": "Villager",
+      "description": "Has no special abilities, but votes during the day to eliminate suspected werewolves."
+    },
+    "seer": {
+      "name": "Seer",
+      "description": "Each night, can check one player to learn if they are a werewolf or not."
+    },
+    "doctor": {
+      "name": "Doctor",
+      "description": "Each night, can protect one player from being killed by werewolves."
+    },
+    "bodyguard": {
+      "name": "Bodyguard",
+      "description": "Each night, can protect one player from being killed by werewolves."
+    },
+    "witch": {
+      "name": "Witch",
+      "description": "Has one healing potion and one poison potion to use during the game."
+    },
+    "hunter": {
+      "name": "Hunter",
+      "description": "If eliminated, the Hunter can immediately eliminate another player."
+    },
+    "wolfCub": {
+      "name": "Wolf Cub",
+      "description": "A young werewolf. If eliminated, the werewolves get an extra kill the next night."
+    },
+    "spellcaster": {
+      "name": "Spellcaster",
+      "description": "Each night, can silence one player who will not be able to vote the next day."
+    }
+  },
+  "roleReveal": {
+    "title": "Role Reveal Phase",
+    "instruction": "Each player should click the 'Reveal' button below their name to see their role privately.",
+    "revealYourRole": "Reveal Your Role",
+    "yourRoleIs": "Your Role is",
+    "keepSecretInstruction": "Keep this information secret!",
+    "allRevealed": "All players have seen their roles!",
+    "proceedToNight": "Proceed to Night Phase"
+  },
+  "night": {
+    "title": "Night Phase",
+    "wakeUpMessage": "{{role}}, wake up!",
+    "action": "Choose a player to {{action}}:",
+    "confirmAction": "Confirm {{action}}",
+    "nightSummary": "Night Summary",
+    "proceedToDay": "Proceed to Day Phase"
+  },
+  "day": {
+    "title": "Day Phase",
+    "nightResults": "Night Results",
+    "noOneEliminated": "No one was eliminated tonight.",
+    "playerEliminated": "{{player}} was eliminated during the night.",
+    "playersEliminated": "The following players were eliminated during the night: {{players}}",
+    "witchPoison": "The Witch used a poison potion on {{player}}",
+    "spellcasterSilence": "The Spellcaster has silenced {{player}}. They cannot vote or participate in discussions today.",
+    "villageDiscussion": "Village Discussion",
+    "discussionDescription": "The village must decide who to eliminate. Discuss and then vote.",
+    "proceedToNight": "Proceed to Night Phase",
+    "eliminate": "Eliminate"
+  },
+  "result": {
+    "title": "Game Over",
+    "werewolvesWin": "Werewolves Win!",
+    "villagersWin": "Villagers Win!",
+    "werewolvesWinDescription": "The werewolves have outnumbered the villagers and taken over the village.",
+    "villagersWinDescription": "The villagers have eliminated all the werewolves and saved their village!",
+    "werewolfTeam": "Werewolf Team",
+    "villageTeam": "Village Team",
+    "survived": "Survived",
+    "eliminated": "Eliminated",
+    "noWerewolves": "No werewolves in this game",
+    "thanksMessage": "Thank you for playing! Hope you enjoyed the game."
+  },
+  "language": {
+    "select": "Select Language",
+    "en": "English",
+    "th": "Thai (ไทย)"
+  }
+}

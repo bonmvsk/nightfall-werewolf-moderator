@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useGame } from "@/contexts/GameContext";
@@ -8,24 +9,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PlayerCard from "./PlayerCard";
 import RoleSelector from "./RoleSelector";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "./LanguageSelector";
 
 const GameSetup = () => {
   const navigate = useNavigate();
   const { gameState, addPlayer, removePlayer, setGameMode, startGame } = useGame();
   const [playerName, setPlayerName] = useState("");
+  const { t } = useTranslation();
   
   const handleAddPlayer = () => {
     if (playerName.trim()) {
       addPlayer(playerName);
       setPlayerName("");
     } else {
-      toast.error("Please enter a player name");
+      toast.error(t('setup.playerName'));
     }
   };
   
   const handleStartGame = () => {
     if (gameState.players.length < 5) {
-      toast.error("You need at least 5 players to start the game");
+      toast.error(t('setup.needMorePlayers'));
       return;
     }
     
@@ -44,7 +48,12 @@ const GameSetup = () => {
       });
       
       if (totalRolesCount !== gameState.players.length) {
-        toast.error(`You need exactly ${gameState.players.length} roles selected to match the player count. Currently selected: ${totalRolesCount}`);
+        toast.error(
+          t('setup.rolesMismatch', { 
+            count: gameState.players.length, 
+            selected: totalRolesCount 
+          })
+        );
         return;
       }
     }
@@ -55,34 +64,39 @@ const GameSetup = () => {
   
   return (
     <div className="container mx-auto px-4 max-w-4xl animate-fade-in">
-      <h1 className="text-3xl md:text-4xl font-bold text-center mb-6 text-moonlight-light">Werewolf Game Setup</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl md:text-4xl font-bold text-moonlight-light">{t('setup.title')}</h1>
+        <LanguageSelector />
+      </div>
       
       {/* Players Card: Add players form and players list combined */}
       <Card className="mb-8 shadow-lg">
         <CardHeader>
-          <CardTitle>Players</CardTitle>
-          <CardDescription>Add players and manage the player list</CardDescription>
+          <CardTitle>{t('common.players')}</CardTitle>
+          <CardDescription>{t('setup.addPlayers')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <h3 className="text-lg font-medium mb-3">Add Players</h3>
+            <h3 className="text-lg font-medium mb-3">{t('setup.addPlayers')}</h3>
             <div className="flex gap-2">
               <Input
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
-                placeholder="Enter player name"
+                placeholder={t('setup.playerName')}
                 className="bg-night-dark border-moonlight/20"
                 onKeyPress={(e) => {
                   if (e.key === "Enter") handleAddPlayer();
                 }}
               />
-              <Button onClick={handleAddPlayer}>Add</Button>
+              <Button onClick={handleAddPlayer}>{t('common.add')}</Button>
             </div>
           </div>
           
           {gameState.players.length > 0 && (
             <div>
-              <h3 className="text-lg font-medium mb-3">Players List ({gameState.players.length})</h3>
+              <h3 className="text-lg font-medium mb-3">
+                {t('setup.playersList')} ({gameState.players.length})
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {gameState.players.map(player => (
                   <div key={player.id} className="flex">
@@ -108,28 +122,27 @@ const GameSetup = () => {
       {/* Game Settings Card: Game mode and role distribution combined */}
       <Card className="mb-8 shadow-lg">
         <CardHeader>
-          <CardTitle>Game Settings</CardTitle>
-          <CardDescription>Configure how roles are assigned and distributed</CardDescription>
+          <CardTitle>{t('setup.gameSettings')}</CardTitle>
+          <CardDescription>{t('setup.gameMode')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <h3 className="text-lg font-medium mb-3">Game Mode</h3>
+            <h3 className="text-lg font-medium mb-3">{t('setup.gameMode')}</h3>
             <Tabs 
               defaultValue={gameState.gameMode} 
               onValueChange={(value) => setGameMode(value as any)}
             >
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="system">System Random Assignment</TabsTrigger>
-                <TabsTrigger value="cards">Player-drawn Cards</TabsTrigger>
+                <TabsTrigger value="system">{t('setup.systemMode')}</TabsTrigger>
+                <TabsTrigger value="cards">{t('setup.cardsMode')}</TabsTrigger>
               </TabsList>
               
               <TabsContent value="system" className="mt-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>System Random Assignment</CardTitle>
+                    <CardTitle>{t('setup.systemMode')}</CardTitle>
                     <CardDescription>
-                      The system will randomly assign roles to each player. 
-                      Each player can view their role privately.
+                      {t('setup.systemDescription')}
                     </CardDescription>
                   </CardHeader>
                 </Card>
@@ -138,10 +151,9 @@ const GameSetup = () => {
               <TabsContent value="cards" className="mt-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Player-drawn Cards</CardTitle>
+                    <CardTitle>{t('setup.cardsMode')}</CardTitle>
                     <CardDescription>
-                      The system will only show which roles are in play.
-                      Players use physical cards to determine roles.
+                      {t('setup.cardsDescription')}
                     </CardDescription>
                   </CardHeader>
                 </Card>
@@ -162,7 +174,7 @@ const GameSetup = () => {
           size="lg"
           className="btn-primary px-8 py-6 text-lg"
         >
-          Start Game
+          {t('setup.startGame')}
         </Button>
       </div>
     </div>

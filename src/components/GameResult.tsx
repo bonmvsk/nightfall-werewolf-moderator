@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skull, Award } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const GameResult = () => {
   const { gameState, resetGame } = useGame();
+  const { t } = useTranslation();
   
   const werewolfPlayers = gameState.players.filter(p => p.role === 'werewolf');
   const villagePlayers = gameState.players.filter(p => p.role !== 'werewolf');
@@ -14,7 +16,7 @@ const GameResult = () => {
   return (
     <div className="container mx-auto px-4 max-w-4xl py-8 animate-fade-in">
       <h1 className="text-4xl font-bold text-center mb-8">
-        Game Over
+        {t('result.title')}
       </h1>
       
       <Card className="bg-night/80 border-moonlight/50 mb-8 overflow-hidden relative">
@@ -29,15 +31,15 @@ const GameResult = () => {
             <Award className={`mr-2 h-8 w-8 ${
               gameState.winner === 'werewolves' ? 'text-werewolf' : 'text-blue-400'
             }`} />
-            {gameState.winner === 'werewolves' ? 'Werewolves Win!' : 'Villagers Win!'}
+            {gameState.winner === 'werewolves' ? t('result.werewolvesWin') : t('result.villagersWin')}
           </CardTitle>
         </CardHeader>
         
         <CardContent className="relative z-10">
           <p className="text-center text-lg mb-6">
             {gameState.winner === 'werewolves' 
-              ? 'The werewolves have outnumbered the villagers and taken over the village.'
-              : 'The villagers have eliminated all the werewolves and saved their village!'
+              ? t('result.werewolvesWinDescription')
+              : t('result.villagersWinDescription')
             }
           </p>
           
@@ -46,7 +48,7 @@ const GameResult = () => {
             <div>
               <h3 className="text-xl font-bold text-werewolf mb-3 flex items-center">
                 <Skull className="mr-2 h-5 w-5" />
-                Werewolf Team
+                {t('result.werewolfTeam')}
               </h3>
               
               <div className="space-y-3">
@@ -59,13 +61,13 @@ const GameResult = () => {
                       <span className="font-semibold">{player.name}</span>
                     </div>
                     <Badge variant={player.status === 'alive' ? "default" : "destructive"}>
-                      {player.status === 'alive' ? 'Survived' : 'Eliminated'}
+                      {player.status === 'alive' ? t('result.survived') : t('result.eliminated')}
                     </Badge>
                   </div>
                 ))}
                 
                 {werewolfPlayers.length === 0 && (
-                  <p className="text-muted-foreground">No werewolves in this game</p>
+                  <p className="text-muted-foreground">{t('result.noWerewolves')}</p>
                 )}
               </div>
             </div>
@@ -74,7 +76,7 @@ const GameResult = () => {
             <div>
               <h3 className="text-xl font-bold text-blue-400 mb-3 flex items-center">
                 <Award className="mr-2 h-5 w-5" />
-                Village Team
+                {t('result.villageTeam')}
               </h3>
               
               <div className="space-y-2">
@@ -86,11 +88,11 @@ const GameResult = () => {
                     <div>
                       <span className="font-semibold">{player.name}</span>
                       <span className="text-xs ml-2 text-muted-foreground capitalize">
-                        ({player.role})
+                        ({t(`roles.${player.role}.name`)})
                       </span>
                     </div>
                     <Badge variant={player.status === 'alive' ? "default" : "destructive"}>
-                      {player.status === 'alive' ? 'Survived' : 'Eliminated'}
+                      {player.status === 'alive' ? t('result.survived') : t('result.eliminated')}
                     </Badge>
                   </div>
                 ))}
@@ -106,14 +108,14 @@ const GameResult = () => {
               size="lg"
               className="px-8"
             >
-              Play Again
+              {t('common.playAgain')}
             </Button>
           </div>
         </CardFooter>
       </Card>
       
       <div className="text-center text-muted-foreground">
-        <p>Thank you for playing! Hope you enjoyed the game.</p>
+        <p>{t('result.thanksMessage')}</p>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Play, Pause, RotateCcw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface GameTimerProps {
   phase: "day" | "night";
@@ -11,6 +12,7 @@ interface GameTimerProps {
 
 const GameTimer = ({ phase }: GameTimerProps) => {
   const { gameState, timerSettings, startTimer, stopTimer, resetTimer, updateTimerSettings } = useGame();
+  const { t } = useTranslation();
   
   const [editingTime, setEditingTime] = useState(false);
   const [timeInput, setTimeInput] = useState("");
@@ -52,7 +54,9 @@ const GameTimer = ({ phase }: GameTimerProps) => {
   
   return (
     <div className="glass-card p-4 rounded-lg w-full md:w-64">
-      <h3 className="text-lg font-semibold mb-3 capitalize">{phase} Phase Timer</h3>
+      <h3 className="text-lg font-semibold mb-3 capitalize">
+        {t(`common.${phase}`)} {t('common.phase')} {t('common.timer')}
+      </h3>
       
       {editingTime ? (
         <div className="flex items-center space-x-2 mb-4">
@@ -63,7 +67,7 @@ const GameTimer = ({ phase }: GameTimerProps) => {
             min="1"
             className="bg-night-dark border-moonlight/20"
           />
-          <Button size="sm" onClick={handleSaveTime}>Save</Button>
+          <Button size="sm" onClick={handleSaveTime}>{t('common.save')}</Button>
         </div>
       ) : (
         <div className="text-3xl font-bold mb-4 flex items-center justify-between">
@@ -71,7 +75,7 @@ const GameTimer = ({ phase }: GameTimerProps) => {
             {minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}
           </span>
           <Button variant="ghost" size="sm" onClick={handleEditClick}>
-            Edit
+            {t('common.edit')}
           </Button>
         </div>
       )}
@@ -83,9 +87,9 @@ const GameTimer = ({ phase }: GameTimerProps) => {
           variant="default"
         >
           {isActive ? (
-            <><Pause className="mr-2 h-4 w-4" /> Pause</>
+            <><Pause className="mr-2 h-4 w-4" /> {t('common.pause')}</>
           ) : (
-            <><Play className="mr-2 h-4 w-4" /> Start</>
+            <><Play className="mr-2 h-4 w-4" /> {t('common.start')}</>
           )}
         </Button>
         
@@ -93,7 +97,7 @@ const GameTimer = ({ phase }: GameTimerProps) => {
           onClick={handleReset} 
           variant="secondary"
         >
-          <RotateCcw className="mr-2 h-4 w-4" /> Reset
+          <RotateCcw className="mr-2 h-4 w-4" /> {t('common.reset')}
         </Button>
       </div>
     </div>

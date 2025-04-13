@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import RoleReveal from "./components/RoleReveal";
 import { GameProvider } from "./contexts/GameContext";
+import "./i18n/i18n"; // Import i18n configuration
 
 const queryClient = new QueryClient();
 
