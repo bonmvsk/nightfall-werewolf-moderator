@@ -51,7 +51,7 @@ const GameTimer = ({ phase }: GameTimerProps) => {
   };
   
   return (
-    <div className="glass-card p-4 rounded-lg w-full md:w-64">
+    <div className="glass-card p-4 rounded-lg w-full">
       <h3 className="text-lg font-semibold mb-3 capitalize">{phase} Phase Timer</h3>
       
       {editingTime ? (
