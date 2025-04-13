@@ -146,14 +146,6 @@ const NightPhase = () => {
           Night Phase
         </h1>
         <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            onClick={() => setShowAllPlayersDialog(true)}
-            className="flex items-center gap-2"
-          >
-            <Users size={18} />
-            All Players
-          </Button>
           <GameTimer phase="night" />
         </div>
       </div>
