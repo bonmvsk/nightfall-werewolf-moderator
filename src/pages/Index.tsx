@@ -1,5 +1,4 @@
 
-import { GameProvider } from "@/contexts/GameContext";
 import GameSetup from "@/components/GameSetup";
 import RoleReveal from "@/components/RoleReveal";
 import NightPhase from "@/components/NightPhase";
@@ -51,11 +50,7 @@ const GameBackground = () => {
 };
 
 const Index = () => {
-  return (
-    <GameProvider>
-      <GameBackground />
-    </GameProvider>
-  );
+  return <GameBackground />;
 };
 
 export default Index;
