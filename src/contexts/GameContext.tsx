@@ -1,11 +1,14 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { 
-  Player, GameMode, GamePhase, PlayerRole, GameState, NightAction, TimerSettings
+import {
+  Player, GameMode, PlayerRole, GameState, NightAction, TimerSettings
 } from "@/lib/types";
-import { DEFAULT_TIMER_SETTINGS, getRecommendedRoles, checkWinCondition } from "@/lib/game-data";
+import {
+  DEFAULT_TIMER_SETTINGS, getRecommendedRoles, checkWinCondition, roleSetupError, shuffle,
+  resolveNight, lynch, hunterShot
+} from "@/lib/game-data";
 import { toast } from "sonner";
+import i18n from "@/i18n/i18n";
 
 interface GameContextType {
   gameState: GameState;
@@ -13,28 +16,35 @@ interface GameContextType {
   addPlayer: (name: string) => void;
   removePlayer: (id: string) => void;
   setGameMode: (mode: GameMode) => void;
+  setRoleSetup: (roles: PlayerRole[]) => void;
   startGame: () => void;
   resetGame: () => void;
-  viewRole: (playerId: string) => void;
-  performNightAction: (action: Partial<NightAction>) => void;
-  completeNightPhase: () => void;
-  startDayPhase: () => void;
-  eliminatePlayer: (playerId: string) => void;
+  updatePlayerRole: (playerId: string, role: PlayerRole) => void;
   startNightPhase: () => void;
-  setCustomRoles: (roles: PlayerRole[]) => void;
+  performNightAction: (action: NightAction) => void;
+  completeNightPhase: () => void;
+  lynchPlayer: (playerId: string) => void;
+  resolveHunterShot: (targetId: string | null) => void;
   updateTimerSettings: (settings: Partial<TimerSettings>) => void;
   startTimer: (phase: 'day' | 'night') => void;
   stopTimer: (phase: 'day' | 'night') => void;
   resetTimer: (phase: 'day' | 'night') => void;
-  updatePlayerRole: (playerId: string, role: PlayerRole) => void;
 }
 
 const defaultGameState: GameState = {
   players: [],
   gamePhase: 'setup',
   gameMode: 'system',
-  currentNightRole: null,
+  roleSetup: [],
   nightActions: [],
+  previousNightActions: [],
+  witchPotions: { heal: true, poison: true },
+  huntressShotUsed: false,
+  toughGuyDoomed: [],
+  doppelgangers: {},
+  wolfExtraKill: false,
+  pendingHunters: [],
+  lynchedToday: false,
   dayTimeRemaining: DEFAULT_TIMER_SETTINGS.day,
   nightTimeRemaining: DEFAULT_TIMER_SETTINGS.night,
   dayTimerActive: false,
@@ -56,17 +66,17 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       interval = window.setInterval(() => {
         setGameState((prevState) => {
           const newTimeRemaining = prevState.dayTimeRemaining - 1;
-          
+
           if (newTimeRemaining <= 0) {
             clearInterval(interval);
-            toast.warning("Day phase time is up!");
+            toast.warning(i18n.t('day.timeUp'));
             return {
               ...prevState,
               dayTimerActive: false,
               dayTimeRemaining: 0
             };
           }
-          
+
           return {
             ...prevState,
             dayTimeRemaining: newTimeRemaining
@@ -87,17 +97,17 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       interval = window.setInterval(() => {
         setGameState((prevState) => {
           const newTimeRemaining = prevState.nightTimeRemaining - 1;
-          
+
           if (newTimeRemaining <= 0) {
             clearInterval(interval);
-            toast.warning("Night phase time is up!");
+            toast.warning(i18n.t('night.timeUp'));
             return {
               ...prevState,
               nightTimerActive: false,
               nightTimeRemaining: 0
             };
           }
-          
+
           return {
             ...prevState,
             nightTimeRemaining: newTimeRemaining
@@ -111,51 +121,39 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, [gameState.nightTimerActive]);
 
+  // Deaths only happen at dawn and during the day; wait for any hunter to shoot first.
   useEffect(() => {
-    if (gameState.gamePhase !== 'setup') {
-      const winner = checkWinCondition(gameState.players);
-      if (winner) {
-        setGameState(prev => ({ ...prev, winner, gamePhase: 'result' }));
-      }
+    if (gameState.gamePhase !== 'day' || gameState.pendingHunters.length > 0) return;
+    const winner = checkWinCondition(gameState.players);
+    if (winner) {
+      setGameState(prev => ({ ...prev, winner, gamePhase: 'result', dayTimerActive: false, nightTimerActive: false }));
     }
-  }, [gameState.players, gameState.gamePhase]);
+  }, [gameState.players, gameState.gamePhase, gameState.pendingHunters]);
+
+  // Changing the player count resets roles to the recommendation for the new count.
+  const withPlayers = (prev: GameState, players: Player[]): GameState => ({
+    ...prev,
+    players: players.map(p => ({ ...p, role: null })),
+    roleSetup: getRecommendedRoles(players.length)
+  });
 
   const addPlayer = (name: string) => {
-    if (!name.trim()) {
-      toast.error("Player name cannot be empty");
+    const trimmed = name.trim();
+    if (!trimmed) {
+      toast.error(i18n.t('setup.emptyName'));
       return;
     }
-    
-    if (gameState.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
-      toast.error(`Player "${name}" already exists`);
+
+    if (gameState.players.some(p => p.name.toLowerCase() === trimmed.toLowerCase())) {
+      toast.error(i18n.t('setup.duplicateName', { name: trimmed }));
       return;
     }
-    
-    const newPlayer: Player = {
-      id: uuidv4(),
-      name: name.trim(),
-      role: null,
-      status: 'alive',
-    };
-    
-    setGameState(prevState => ({
-      ...prevState,
-      players: [...prevState.players, newPlayer]
-    }));
-    
-    toast.success(`Added player: ${name}`);
+
+    setGameState(prev => withPlayers(prev, [...prev.players, { id: uuidv4(), name: trimmed, role: null, status: 'alive' }]));
   };
 
   const removePlayer = (id: string) => {
-    setGameState(prevState => ({
-      ...prevState,
-      players: prevState.players.filter(p => p.id !== id)
-    }));
-    
-    const playerName = gameState.players.find(p => p.id === id)?.name;
-    if (playerName) {
-      toast.info(`Removed player: ${playerName}`);
-    }
+    setGameState(prev => withPlayers(prev, prev.players.filter(p => p.id !== id)));
   };
 
   const setGameMode = (mode: GameMode) => {
@@ -165,223 +163,84 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }));
   };
 
-  const setCustomRoles = (roles: PlayerRole[]) => {
-    if (roles.length !== gameState.players.length) {
-      toast.error("The number of roles must match the number of players");
-      return;
-    }
-    
-    const shuffledRoles = [...roles].sort(() => Math.random() - 0.5);
-    
-    setGameState(prevState => ({
-      ...prevState,
-      players: prevState.players.map((player, index) => ({
-        ...player,
-        role: shuffledRoles[index]
-      }))
-    }));
-    
-    toast.success("Custom roles have been assigned");
+  const setRoleSetup = (roles: PlayerRole[]) => {
+    setGameState(prev => ({ ...prev, roleSetup: roles }));
   };
 
   const startGame = () => {
-    if (gameState.players.length < 5) {
-      toast.error("You need at least 5 players to start the game");
+    const { players, roleSetup, gameMode } = gameState;
+    const error = roleSetupError(roleSetup, players.length);
+    if (error) {
+      toast.error(i18n.t(`setup.${error}`, { count: players.length, selected: roleSetup.length }));
       return;
     }
-    
-    if (gameState.gameMode === 'system' && !gameState.players.some(p => p.role)) {
-      const recommendedRoles = getRecommendedRoles(gameState.players.length);
-      const shuffledRoles = [...recommendedRoles].sort(() => Math.random() - 0.5);
-      
-      setGameState(prevState => ({
-        ...prevState,
-        players: prevState.players.map((player, index) => ({
-          ...player,
-          role: shuffledRoles[index]
-        })),
-        gamePhase: 'role-reveal',
-        nightActions: [],
-        eliminatedLastNight: []
-      }));
-    } else {
-      setGameState(prevState => ({
-        ...prevState,
-        gamePhase: 'role-reveal',
-        nightActions: [],
-        eliminatedLastNight: []
-      }));
-    }
-    
-    toast.info("Time to reveal roles to players");
+
+    // Cards mode: roles are picked from the physical cards during reveal.
+    const roles = gameMode === 'system' ? shuffle(roleSetup) : [];
+    setGameState(prev => ({
+      ...defaultGameState,
+      gameMode: prev.gameMode,
+      roleSetup: prev.roleSetup,
+      players: prev.players.map((p, i) => ({ ...p, role: roles[i] ?? null, status: 'alive', silenced: false })),
+      dayTimeRemaining: timerSettings.day,
+      nightTimeRemaining: timerSettings.night,
+      gamePhase: 'role-reveal'
+    }));
   };
 
   const resetGame = () => {
-    setGameState({
+    setGameState(prev => ({
       ...defaultGameState,
-      players: gameState.players.map(p => ({
-        ...p,
-        role: null,
-        status: 'alive',
-        protected: false,
-        poisoned: false,
-        targetedBy: []
-      }))
-    });
-    
-    toast.info("Game has been reset");
+      gameMode: prev.gameMode,
+      roleSetup: prev.roleSetup,
+      players: prev.players.map(p => ({ ...p, role: null, status: 'alive', silenced: false }))
+    }));
   };
 
-  const viewRole = (playerId: string) => {
-    const player = gameState.players.find(p => p.id === playerId);
-    
-    if (player && player.role) {
-      toast.info(`${player.name}'s role: ${player.role}`);
-    } else {
-      toast.error("Role not found");
-    }
-  };
-
-  const performNightAction = (action: Partial<NightAction>) => {
-    if (!action.roleId || !action.actionType) return;
-    
+  const updatePlayerRole = (playerId: string, role: PlayerRole) => {
     setGameState(prevState => ({
       ...prevState,
-      nightActions: [...prevState.nightActions, action as NightAction],
-      currentNightRole: null
-    }));
-    
-    toast.info(`${action.roleName || 'Role'} action completed`);
-  };
-
-  const completeNightPhase = () => {
-    let updatedPlayers = [...gameState.players];
-    const eliminatedIds: string[] = [];
-    
-    // First, reset protection statuses from previous night
-    updatedPlayers = updatedPlayers.map(player => ({
-      ...player,
-      protected: false,
-      targetedBy: [],
-      silenced: false
-    }));
-    
-    // Apply protection from bodyguard and doctor
-    gameState.nightActions.forEach(action => {
-      if (action.targetId && (action.actionType === 'protect' || action.actionType === 'heal')) {
-        const targetIndex = updatedPlayers.findIndex(p => p.id === action.targetId);
-        if (targetIndex >= 0) {
-          updatedPlayers[targetIndex] = {
-            ...updatedPlayers[targetIndex],
-            protected: true
-          };
-        }
-      }
-    });
-    
-    // Record werewolf targets
-    gameState.nightActions.forEach(action => {
-      if (action.targetId && action.actionType === 'kill' && (action.roleId === 'werewolf' || action.roleId === 'wolf-cub')) {
-        const targetIndex = updatedPlayers.findIndex(p => p.id === action.targetId);
-        if (targetIndex >= 0) {
-          // Record that this player was targeted by werewolves
-          updatedPlayers[targetIndex] = {
-            ...updatedPlayers[targetIndex],
-            targetedBy: [...(updatedPlayers[targetIndex].targetedBy || []), action.roleId]
-          };
-          
-          // Only eliminate if not protected
-          if (!updatedPlayers[targetIndex].protected) {
-            eliminatedIds.push(action.targetId);
-          }
-        }
-      }
-    });
-    
-    // Apply spellcaster's silence
-    gameState.nightActions.forEach(action => {
-      if (action.targetId && action.actionType === 'silence' && action.roleId === 'spellcaster') {
-        const targetIndex = updatedPlayers.findIndex(p => p.id === action.targetId);
-        if (targetIndex >= 0) {
-          updatedPlayers[targetIndex] = {
-            ...updatedPlayers[targetIndex],
-            silenced: true
-          };
-        }
-      }
-    });
-    
-    // Apply witch's poison which bypasses protection
-    gameState.nightActions.forEach(action => {
-      if (action.targetId && action.actionType === 'poison' && action.roleId === 'witch') {
-        // Witch's poison always kills, regardless of protection
-        eliminatedIds.push(action.targetId);
-      }
-    });
-    
-    // Update player statuses based on elimination
-    updatedPlayers = updatedPlayers.map(player => ({
-      ...player,
-      status: eliminatedIds.includes(player.id) ? 'dead' : player.status
-    }));
-    
-    setGameState(prevState => ({
-      ...prevState,
-      players: updatedPlayers,
-      gamePhase: 'day',
-      eliminatedLastNight: eliminatedIds
-    }));
-    
-    const winner = checkWinCondition(updatedPlayers);
-    if (winner) {
-      setGameState(prev => ({ ...prev, winner, gamePhase: 'result' }));
-    } else {
-      toast.info("Night phase is complete. The village awakens...");
-    }
-  };
-
-  const startDayPhase = () => {
-    startTimer('day');
-    
-    setGameState(prevState => ({
-      ...prevState,
-      gamePhase: 'day'
-    }));
-  };
-
-  const eliminatePlayer = (playerId: string) => {
-    const playerToEliminate = gameState.players.find(p => p.id === playerId);
-    
-    if (!playerToEliminate) {
-      toast.error("Player not found");
-      return;
-    }
-    
-    setGameState(prevState => ({
-      ...prevState,
-      players: prevState.players.map(p => 
-        p.id === playerId ? { ...p, status: 'dead' } : p
+      players: prevState.players.map(player =>
+        player.id === playerId ? { ...player, role } : player
       )
     }));
-    
-    toast.warning(`${playerToEliminate.name} has been eliminated by the village`);
-    
-    if (playerToEliminate.role === 'hunter') {
-      toast.info("The Hunter can eliminate one more player before dying");
-    }
   };
 
   const startNightPhase = () => {
-    resetTimer('night');
-    
-    setGameState(prevState => ({
-      ...prevState,
+    setGameState(prev => ({
+      ...prev,
       gamePhase: 'night',
-      currentNightRole: 'seer',
-      nightActions: []
+      nightActions: [],
+      players: prev.players.map(p => ({ ...p, silenced: false })),
+      dayTimerActive: false,
+      nightTimerActive: false,
+      nightTimeRemaining: timerSettings.night
     }));
-    
-    toast.info("Night falls on the village...");
+  };
+
+  const performNightAction = (action: NightAction) => {
+    setGameState(prev => ({ ...prev, nightActions: [...prev.nightActions, action] }));
+  };
+
+  const completeNightPhase = () => {
+    setGameState(prev => ({
+      ...prev,
+      ...resolveNight(prev),
+      nightTimerActive: false,
+      dayTimerActive: false,
+      dayTimeRemaining: timerSettings.day
+    }));
+  };
+
+  const lynchPlayer = (playerId: string) => {
+    if (gameState.lynchedToday) return;
+    const name = gameState.players.find(p => p.id === playerId)?.name;
+    setGameState(prev => ({ ...prev, ...lynch(prev, playerId) }));
+    toast.warning(i18n.t('day.lynched', { player: name }));
+  };
+
+  const resolveHunterShot = (targetId: string | null) => {
+    setGameState(prev => ({ ...prev, ...hunterShot(prev, targetId) }));
   };
 
   const updateTimerSettings = (settings: Partial<TimerSettings>) => {
@@ -389,11 +248,11 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       ...prev,
       ...settings
     }));
-    
+
     if (settings.day !== undefined && !gameState.dayTimerActive) {
       setGameState(prev => ({ ...prev, dayTimeRemaining: settings.day }));
     }
-    
+
     if (settings.night !== undefined && !gameState.nightTimerActive) {
       setGameState(prev => ({ ...prev, nightTimeRemaining: settings.night }));
     }
@@ -401,14 +260,14 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const startTimer = (phase: 'day' | 'night') => {
     if (phase === 'day') {
-      setGameState(prev => ({ 
-        ...prev, 
+      setGameState(prev => ({
+        ...prev,
         dayTimerActive: true,
         dayTimeRemaining: prev.dayTimeRemaining > 0 ? prev.dayTimeRemaining : timerSettings.day
       }));
     } else {
-      setGameState(prev => ({ 
-        ...prev, 
+      setGameState(prev => ({
+        ...prev,
         nightTimerActive: true,
         nightTimeRemaining: prev.nightTimeRemaining > 0 ? prev.nightTimeRemaining : timerSettings.night
       }));
@@ -425,27 +284,18 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const resetTimer = (phase: 'day' | 'night') => {
     if (phase === 'day') {
-      setGameState(prev => ({ 
-        ...prev, 
+      setGameState(prev => ({
+        ...prev,
         dayTimerActive: false,
         dayTimeRemaining: timerSettings.day
       }));
     } else {
-      setGameState(prev => ({ 
-        ...prev, 
+      setGameState(prev => ({
+        ...prev,
         nightTimerActive: false,
         nightTimeRemaining: timerSettings.night
       }));
     }
-  };
-
-  const updatePlayerRole = (playerId: string, role: PlayerRole) => {
-    setGameState(prevState => ({
-      ...prevState,
-      players: prevState.players.map(player => 
-        player.id === playerId ? { ...player, role } : player
-      )
-    }));
   };
 
   return (
@@ -455,20 +305,19 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       addPlayer,
       removePlayer,
       setGameMode,
+      setRoleSetup,
       startGame,
       resetGame,
-      viewRole,
+      updatePlayerRole,
+      startNightPhase,
       performNightAction,
       completeNightPhase,
-      startDayPhase,
-      eliminatePlayer,
-      startNightPhase,
-      setCustomRoles,
+      lynchPlayer,
+      resolveHunterShot,
       updateTimerSettings,
       startTimer,
       stopTimer,
-      resetTimer,
-      updatePlayerRole
+      resetTimer
     }}>
       {children}
     </GameContext.Provider>

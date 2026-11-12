@@ -1,167 +1,34 @@
-
 import { useState, useEffect } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import PlayerCard from "./PlayerCard";
 import GameTimer from "./GameTimer";
-import { ROLES, getNightActionOrder } from "@/lib/game-data";
-import { Moon, ArrowRight, Users, CheckCircle, XCircle, Sun } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Player } from "@/lib/types";
+import { ROLES, getNightActionOrder, isWolf, nightCandidates } from "@/lib/game-data";
+import { Moon, ArrowRight, CheckCircle, XCircle, Sun, HeartPulse, FlaskConical } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const NightPhase = () => {
   const { t } = useTranslation();
-  const { gameState, performNightAction, completeNightPhase, startTimer, stopTimer } = useGame();
-  const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
-  const [activeRoles, setActiveRoles] = useState<string[]>([]);
-  const [currentRoleIndex, setCurrentRoleIndex] = useState(0);
-  const [showAllPlayersDialog, setShowAllPlayersDialog] = useState(false);
-  const [playerRoleDialog, setPlayerRoleDialog] = useState<{open: boolean, player: Player | null}>({
-    open: false,
-    player: null
-  });
-  const [seerResult, setSeerResult] = useState<{shown: boolean, isGood: boolean | null, playerName: string, actionTaken: boolean}>({
-    shown: false,
-    isGood: null,
-    playerName: "",
-    actionTaken: false
-  });
-  const [allRolesCompleted, setAllRolesCompleted] = useState(false);
-  
-  const currentRolePlayers = gameState.players.filter(
-    p => p.role === activeRoles[currentRoleIndex] && p.status === 'alive'
-  );
-  
-  const currentRoleData = activeRoles[currentRoleIndex] 
-    ? ROLES[activeRoles[currentRoleIndex] as any] 
-    : null;
-  
+  const { gameState, performNightAction, completeNightPhase, startTimer } = useGame();
+  const { players, nightActions, previousNightActions, witchPotions, wolfExtraKill, huntressShotUsed, doppelgangers } = gameState;
+  const alive = players.filter(p => p.status === 'alive');
+
+  // Wake order is fixed at dusk; deaths resolve at dawn, so everyone alive now gets their turn.
+  const [steps] = useState(() => getNightActionOrder(players, doppelgangers));
+  const [stepIndex, setStepIndex] = useState(0);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [saveTarget, setSaveTarget] = useState<string | null>(null);
+
   useEffect(() => {
-    const playerRoles = gameState.players
-      .filter(p => p.status === 'alive')
-      .map(p => p.role)
-      .filter(Boolean) as string[];
-      
-    const nightActionRoles = getNightActionOrder(playerRoles as any);
-    setActiveRoles(nightActionRoles);
-    
-    if (nightActionRoles.length > 0) {
-      setCurrentRoleIndex(0);
-      startTimer('night');
-    }
+    if (steps.length > 0) startTimer('night');
   }, []);
-  
-  const handleSelectPlayer = (playerId: string) => {
-    if (activeRoles[currentRoleIndex] === 'seer' && seerResult.actionTaken) {
-      return;
-    }
-    
-    setSelectedPlayer(playerId);
-    
-    if (activeRoles[currentRoleIndex] === 'seer') {
-      const selectedPlayerData = gameState.players.find(p => p.id === playerId);
-      if (selectedPlayerData) {
-        const playerRole = selectedPlayerData.role;
-        const isGood = playerRole ? ROLES[playerRole].team === 'village' : true;
-        setSeerResult({
-          shown: true,
-          isGood,
-          playerName: selectedPlayerData.name,
-          actionTaken: true
-        });
-      }
-    } else {
-      setSeerResult({ shown: false, isGood: null, playerName: "", actionTaken: false });
-    }
-  };
-  
-  const handleConfirmAction = () => {
-    if (!selectedPlayer || !activeRoles[currentRoleIndex]) return;
-    
-    const currentRole = activeRoles[currentRoleIndex];
-    let actionType = 'view';
-    
-    switch (currentRole) {
-      case 'werewolf':
-        actionType = 'kill';
-        break;
-      case 'doctor':
-        actionType = 'heal';
-        break;
-      case 'bodyguard':
-        actionType = 'protect';
-        break;
-      case 'witch':
-        actionType = 'poison';
-        break;
-      case 'seer':
-        actionType = 'view';
-        break;
-    }
-    
-    performNightAction({
-      roleId: currentRole,
-      roleName: ROLES[currentRole as any].name,
-      targetId: selectedPlayer,
-      actionType
-    });
-    
-    setSeerResult(prev => ({ ...prev, shown: false }));
-    
-    if (currentRoleIndex < activeRoles.length - 1) {
-      setCurrentRoleIndex(currentRoleIndex + 1);
-      setSelectedPlayer(null);
-    } else {
-      setAllRolesCompleted(true);
-      setSelectedPlayer(null);
-    }
-  };
-  
-  const handleSkipRole = () => {
-    setSeerResult(prev => ({ ...prev, shown: false }));
-    
-    if (currentRoleIndex < activeRoles.length - 1) {
-      setCurrentRoleIndex(currentRoleIndex + 1);
-      setSelectedPlayer(null);
-    } else {
-      setAllRolesCompleted(true);
-      setSelectedPlayer(null);
-    }
-  };
-  
-  const handleViewPlayerRole = (player: Player) => {
-    setPlayerRoleDialog({
-      open: true,
-      player
-    });
-  };
-  
-  if (activeRoles.length === 0) {
-    return (
-      <div className="container mx-auto px-4 max-w-4xl py-8 animate-fade-in text-center">
-        <Card className="bg-night border-moonlight/20">
-          <CardHeader>
-            <CardTitle className="text-center flex items-center justify-center text-2xl">
-              <Moon className="mr-2 h-6 w-6 text-moonlight" />
-              {t('night.title')}
-            </CardTitle>
-            <CardDescription className="text-center">
-              {t('night.noRolesWithNightActions')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center py-6">
-            <Button onClick={completeNightPhase} size="lg">
-              {t('night.proceedToDay')}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-  
-  if (allRolesCompleted) {
+
+  const role = steps[stepIndex];
+  const done = stepIndex >= steps.length;
+  const name = (id: string) => players.find(p => p.id === id)?.name;
+
+  if (done) {
     return (
       <div className="container mx-auto px-4 max-w-4xl py-8 animate-fade-in text-center">
         <Card className="bg-night border-moonlight/20">
@@ -171,15 +38,11 @@ const NightPhase = () => {
               {t('night.nightComplete')}
             </CardTitle>
             <CardDescription className="text-center">
-              {t('night.allActionsCompleted')}
+              {steps.length ? t('night.allActionsCompleted') : t('night.noRolesWithNightActions')}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center py-6">
-            <Button 
-              onClick={completeNightPhase} 
-              size="lg"
-              className="flex items-center gap-2"
-            >
+            <Button onClick={completeNightPhase} size="lg" className="flex items-center gap-2">
               <Sun className="h-5 w-5" />
               {t('night.proceedToDay')}
             </Button>
@@ -188,112 +51,164 @@ const NightPhase = () => {
       </div>
     );
   }
-  
+
+  const holders = alive.filter(p => (role === 'werewolf' ? isWolf(p.role) : p.role === role));
+  const candidateIds = new Set(nightCandidates(role, players, previousNightActions).map(p => p.id));
+  const maxPicks = role === 'werewolf' && wolfExtraKill ? 2 : 1;
+  const seerLocked = role === 'seer' && selected.length > 0; // one look, no peeking at a second player
+  const optional = role === 'witch' || role === 'huntress'; // may pass without picking
+  const canPick = role === 'witch' ? witchPotions.poison : role === 'huntress' ? !huntressShotUsed : true;
+  const wolfVictims = nightActions.filter(a => a.actionType === 'kill').map(a => a.targetId);
+
+  const togglePlayer = (id: string) => {
+    if (!canPick || seerLocked || !candidateIds.has(id)) return;
+    setSelected(prev => {
+      if (prev.includes(id)) return prev.filter(x => x !== id);
+      return maxPicks === 1 ? [id] : [...prev, id].slice(-maxPicks);
+    });
+  };
+
+  const nextStep = () => {
+    setSelected([]);
+    setSaveTarget(null);
+    setStepIndex(i => i + 1);
+  };
+
+  const confirm = () => {
+    if (saveTarget) performNightAction({ roleId: 'witch', targetId: saveTarget, actionType: 'save' });
+    selected.forEach(targetId => performNightAction({ roleId: role, targetId, actionType: ROLES[role].night! }));
+    nextStep();
+  };
+
+  const seerTarget = role === 'seer' ? players.find(p => p.id === selected[0]) : undefined;
+
   return (
     <div className="container mx-auto px-4 max-w-4xl py-8 animate-fade-in">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-8 gap-4 flex-wrap">
         <h1 className="text-3xl font-bold flex items-center">
           <Moon className="mr-2 h-8 w-8 text-moonlight animate-pulse-slow" />
           {t('night.title')}
         </h1>
-        <div className="flex items-center gap-4">
-          <GameTimer phase="night" />
-        </div>
+        <GameTimer phase="night" />
       </div>
-      
+
+      {alive.filter(p => doppelgangers[p.id] && p.role !== 'doppelganger').map(p => (
+        <p key={p.id} className="mb-4 text-sm text-amber-400">
+          {t('night.doppelChanged', { player: p.name, role: t(`roles.${p.role}.name`) })}
+        </p>
+      ))}
+
       <Card className="bg-night border-moonlight/20 mb-8">
         <CardHeader>
-          <CardTitle>
-            {t('night.wakeUpMessage', { role: currentRoleData?.name || t('common.unknownRole') })}
-          </CardTitle>
+          <CardTitle>{t('night.wakeUpMessage', { role: t(`roles.${role}.name`) })}</CardTitle>
           <CardDescription>
-            {currentRoleData?.nightAction || t('night.noNightAction')}
-            {activeRoles[currentRoleIndex] === 'seer' && seerResult.actionTaken && (
-              <span className="text-yellow-400 block mt-1">
-                {t('night.alreadyUsedAbility')}
-              </span>
+            {t(`roles.${role}.nightAction`)}
+            <span className="block mt-1 text-muted-foreground">
+              {t('night.holders', {
+                names: holders.map(p => (doppelgangers[p.id] ? `${p.name} ${t('night.doppelMarker')}` : p.name)).join(', ')
+              })}
+            </span>
+            {role === 'huntress' && huntressShotUsed && (
+              <span className="block mt-1 text-amber-400">{t('night.huntressUsed')}</span>
+            )}
+            {role === 'werewolf' && wolfExtraKill && (
+              <span className="block mt-1 text-red-400">{t('night.extraKill')}</span>
             )}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-6 flex justify-between items-center">
             <span className="text-sm">
-              {t('night.stepProgress', { current: currentRoleIndex + 1, total: activeRoles.length })}
+              {t('night.stepProgress', { current: stepIndex + 1, total: steps.length })}
             </span>
-            
             <div className="flex items-center space-x-2">
-              {activeRoles.map((role, index) => (
-                <div 
-                  key={role + index} 
+              {steps.map((r, i) => (
+                <div
+                  key={r}
                   className={`w-3 h-3 rounded-full ${
-                    index === currentRoleIndex 
-                      ? 'bg-primary animate-pulse-slow' 
-                      : index < currentRoleIndex 
-                        ? 'bg-muted' 
-                        : 'bg-muted/30'
+                    i === stepIndex ? 'bg-primary animate-pulse-slow' : i < stepIndex ? 'bg-muted' : 'bg-muted/30'
                   }`}
                 />
               ))}
             </div>
           </div>
-          
-          {activeRoles[currentRoleIndex] === 'seer' && seerResult.shown && (
+
+          {role === 'witch' && (
+            <div className="mb-6 p-4 rounded-lg border border-moonlight/30 bg-night-dark space-y-3">
+              <p className="flex items-center gap-2 font-semibold">
+                <HeartPulse className="h-5 w-5 text-green-400" />
+                {wolfVictims.length
+                  ? t('night.witchAttacked', { players: wolfVictims.map(name).join(', ') })
+                  : t('night.witchNoAttack')}
+              </p>
+              {witchPotions.heal ? (
+                <div className="flex flex-wrap gap-2">
+                  {wolfVictims.map(id => (
+                    <Button
+                      key={id}
+                      variant={saveTarget === id ? 'default' : 'outline'}
+                      onClick={() => setSaveTarget(saveTarget === id ? null : id)}
+                    >
+                      {t('night.witchSave', { player: name(id) })}
+                    </Button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">{t('night.healUsed')}</p>
+              )}
+              <p className="flex items-center gap-2 font-semibold pt-2">
+                <FlaskConical className="h-5 w-5 text-purple-400" />
+                {witchPotions.poison ? t('night.witchPoisonPick') : t('night.poisonUsed')}
+              </p>
+            </div>
+          )}
+
+          {seerTarget && (
             <div className="mb-6 p-4 rounded-lg border border-moonlight/30 bg-night-dark">
               <h3 className="text-lg font-semibold mb-2">{t('night.seerResult')}:</h3>
-              <div className="flex items-center justify-center py-4">
-                {seerResult.isGood ? (
-                  <div className="flex flex-col items-center">
-                    <CheckCircle className="h-12 w-12 text-green-500 mb-2" />
-                    <p className="text-center">
-                      <span className="font-bold">{seerResult.playerName}</span> {t('night.isGood')}
-                    </p>
-                  </div>
+              <div className="flex flex-col items-center py-4">
+                {isWolf(seerTarget.role) ? (
+                  <XCircle className="h-12 w-12 text-red-500 mb-2" />
                 ) : (
-                  <div className="flex flex-col items-center">
-                    <XCircle className="h-12 w-12 text-red-500 mb-2" />
-                    <p className="text-center">
-                      <span className="font-bold">{seerResult.playerName}</span> {t('night.isBad')}
-                    </p>
-                  </div>
+                  <CheckCircle className="h-12 w-12 text-green-500 mb-2" />
                 )}
+                <p className="text-center">
+                  <span className="font-bold">{seerTarget.name}</span>{' '}
+                  {isWolf(seerTarget.role) ? t('night.isBad') : t('night.isGood')}
+                </p>
               </div>
             </div>
           )}
-          
-          {currentRolePlayers.length > 0 && (
+
+          {canPick && (
             <>
-              <h3 className="text-lg font-semibold mb-3">{t('night.selectTarget')}:</h3>
+              <h3 className="text-lg font-semibold mb-3">
+                {t('night.selectTarget')}{maxPicks > 1 && ` (${selected.length}/${maxPicks})`}:
+              </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-                {gameState.players
-                  .filter(p => p.status === 'alive')
-                  .map(player => (
-                    <div 
-                      key={player.id} 
-                      onClick={() => handleSelectPlayer(player.id)}
-                      className={activeRoles[currentRoleIndex] === 'seer' && seerResult.actionTaken ? 'pointer-events-none opacity-50' : ''}
+                {alive.map(player => {
+                  const pickable = candidateIds.has(player.id) && !seerLocked;
+                  return (
+                    <div
+                      key={player.id}
+                      onClick={() => togglePlayer(player.id)}
+                      className={pickable || selected.includes(player.id) ? '' : 'pointer-events-none opacity-40'}
                     >
-                      <PlayerCard 
-                        player={player} 
-                        selectable={!(activeRoles[currentRoleIndex] === 'seer' && seerResult.actionTaken)}
-                        selected={selectedPlayer === player.id}
-                      />
+                      <PlayerCard player={player} selectable={pickable} selected={selected.includes(player.id)} />
                     </div>
-                  ))}
+                  );
+                })}
               </div>
             </>
           )}
-          
+
           <div className="flex justify-end space-x-3">
-            <Button 
-              variant="secondary"
-              onClick={handleSkipRole}
-            >
+            <Button variant="secondary" onClick={nextStep}>
               {t('common.skip')}
             </Button>
-            
-            <Button 
-              onClick={handleConfirmAction}
-              disabled={(!selectedPlayer && currentRolePlayers.length > 0) || (activeRoles[currentRoleIndex] === 'seer' && !selectedPlayer)}
+            <Button
+              onClick={confirm}
+              disabled={!optional && selected.length === 0}
               className="flex items-center"
             >
               {t('common.continue')} <ArrowRight className="ml-1 h-4 w-4" />
@@ -301,71 +216,6 @@ const NightPhase = () => {
           </div>
         </CardContent>
       </Card>
-      
-      <Dialog open={showAllPlayersDialog} onOpenChange={setShowAllPlayersDialog}>
-        <DialogContent className="bg-night border-moonlight/20 max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{t('night.allActivePlayers')}</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto p-2">
-            {gameState.players
-              .filter(p => p.status === 'alive')
-              .map(player => (
-                <div 
-                  key={player.id}
-                  onClick={() => {
-                    handleViewPlayerRole(player);
-                    setShowAllPlayersDialog(false);
-                  }}
-                  className="cursor-pointer hover:opacity-90 transition-opacity"
-                >
-                  <PlayerCard player={player} selectable />
-                </div>
-              ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog 
-        open={playerRoleDialog.open} 
-        onOpenChange={(open) => setPlayerRoleDialog({ ...playerRoleDialog, open })}
-      >
-        <DialogContent className="bg-night border-moonlight/20 max-w-md">
-          <DialogHeader>
-            <DialogTitle>{playerRoleDialog.player?.name}'s {t('common.role')}</DialogTitle>
-          </DialogHeader>
-          
-          {playerRoleDialog.player?.role && (
-            <div className="flex flex-col items-center">
-              <div className={`w-24 h-24 rounded-full mb-4 flex items-center justify-center
-                ${playerRoleDialog.player.role === 'werewolf' ? 'bg-werewolf/20' : 'bg-blue-900/20'}`}>
-                <div className={`w-16 h-16 rounded-full
-                  ${playerRoleDialog.player.role === 'werewolf' ? 'bg-werewolf/50' : 'bg-blue-900/50'}`}>
-                  {playerRoleDialog.player.role === 'werewolf' && (
-                    <div className="wolf-eye top-4 left-4"></div>
-                  )}
-                </div>
-              </div>
-              
-              <h2 className="text-2xl font-bold mb-2">
-                {t(`roles.${playerRoleDialog.player.role}.name`)}
-              </h2>
-              <p className="text-center text-muted-foreground mb-4">
-                {t(`roles.${playerRoleDialog.player.role}.description`)}
-              </p>
-              
-              <div className={`inline-block px-3 py-1 rounded-full text-sm
-                ${playerRoleDialog.player.role === 'werewolf' ? 'bg-werewolf/30 text-red-300' : 'bg-blue-900/30 text-blue-300'}`}>
-                {t('common.team')}: {ROLES[playerRoleDialog.player.role].team === 'werewolves' ? t('common.werewolves') : t('common.village')}
-              </div>
-              
-              <Button className="mt-6" onClick={() => setPlayerRoleDialog({ open: false, player: null })}>
-                {t('common.close')}
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

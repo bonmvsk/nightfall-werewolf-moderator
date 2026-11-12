@@ -5,13 +5,14 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Skull, Award } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { isWolf } from "@/lib/game-data";
 
 const GameResult = () => {
   const { gameState, resetGame } = useGame();
   const { t } = useTranslation();
   
-  const werewolfPlayers = gameState.players.filter(p => p.role === 'werewolf');
-  const villagePlayers = gameState.players.filter(p => p.role !== 'werewolf');
+  const werewolfPlayers = gameState.players.filter(p => isWolf(p.role));
+  const villagePlayers = gameState.players.filter(p => !isWolf(p.role));
   
   return (
     <div className="container mx-auto px-4 max-w-4xl py-8 animate-fade-in">
@@ -31,16 +32,13 @@ const GameResult = () => {
             <Award className={`mr-2 h-8 w-8 ${
               gameState.winner === 'werewolves' ? 'text-werewolf' : 'text-blue-400'
             }`} />
-            {gameState.winner === 'werewolves' ? t('result.werewolvesWin') : t('result.villagersWin')}
+            {t(`result.${gameState.winner}Win`)}
           </CardTitle>
         </CardHeader>
         
         <CardContent className="relative z-10">
           <p className="text-center text-lg mb-6">
-            {gameState.winner === 'werewolves' 
-              ? t('result.werewolvesWinDescription')
-              : t('result.villagersWinDescription')
-            }
+            {t(`result.${gameState.winner}WinDescription`)}
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -59,6 +57,9 @@ const GameResult = () => {
                   >
                     <div>
                       <span className="font-semibold">{player.name}</span>
+                      <span className="text-xs ml-2 text-muted-foreground">
+                        ({t(`roles.${player.role}.name`)})
+                      </span>
                     </div>
                     <Badge variant={player.status === 'alive' ? "default" : "destructive"}>
                       {player.status === 'alive' ? t('result.survived') : t('result.eliminated')}

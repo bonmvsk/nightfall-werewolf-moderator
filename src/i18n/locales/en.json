@@ -1,4 +1,3 @@
-
 {
   "common": {
     "day": "Day",
@@ -54,45 +53,74 @@
     "needMorePlayers": "You need at least 5 players to start the game",
     "rolesMismatch": "You need exactly {{count}} roles selected to match the player count. Currently selected: {{selected}}",
     "customizeRoles": "Customize Roles",
-    "customizeRolesDescription": "Click on roles to add or remove them. The total number of roles must match the number of players ({{playerCount}}).",
-    "totalRolesSelected": "Total roles selected"
+    "customizeRolesDescription": "Use + / − to set how many of each role. The total must equal the number of players ({{playerCount}}).",
+    "totalRolesSelected": "Total roles selected",
+    "emptyName": "Please enter a player name",
+    "duplicateName": "Player \"{{name}}\" already exists",
+    "badWolfCount": "Need at least 1 werewolf, and fewer werewolves than everyone else",
+    "useRecommended": "Use recommended"
   },
   "roles": {
     "werewolf": {
       "name": "Werewolf",
-      "description": "Each night, werewolves vote to kill one villager. Werewolves win when they equal or outnumber the villagers."
+      "description": "Each night the pack wakes together and picks one non-werewolf to kill. Werewolves win when they equal or outnumber everyone else alive.",
+      "nightAction": "Pick one victim (not a werewolf)"
+    },
+    "wolf-cub": {
+      "name": "Wolf Cub",
+      "description": "On the werewolf team and wakes with the pack. The Seer sees a werewolf. If the Wolf Cub dies in any way, the werewolves kill two players the next night.",
+      "nightAction": "Wake with the werewolves and choose the victim together"
     },
     "villager": {
       "name": "Villager",
-      "description": "Has no special abilities, but votes during the day to eliminate suspected werewolves."
+      "description": "No special power. Watch, argue and vote by day to find the werewolves. Wins when every werewolf is dead."
     },
     "seer": {
       "name": "Seer",
-      "description": "Each night, can check one player to learn if they are a werewolf or not."
+      "description": "Each night, pick one player. The moderator shows whether they are on the werewolf team (the Wolf Cub counts as a werewolf).",
+      "nightAction": "Pick one player to check"
     },
     "doctor": {
       "name": "Doctor",
-      "description": "Each night, can protect one player from being killed by werewolves."
+      "description": "Each night, protect one player: they cannot die that night in any way (bite, poison or Huntress). May protect themself, but not the same player two nights in a row.",
+      "nightAction": "Pick one player to protect (not last night's)"
     },
     "bodyguard": {
       "name": "Bodyguard",
-      "description": "Each night, can protect one player from being killed by werewolves."
+      "description": "Each night, guard one other player: they cannot die that night in any way (bite, poison or Huntress). Cannot guard themself or the same player two nights in a row.",
+      "nightAction": "Pick one other player to guard (not last night's)"
     },
     "witch": {
       "name": "Witch",
-      "description": "Has one healing potion and one poison potion to use during the game."
+      "description": "Has one heal potion and one poison, each usable once per game. Wakes after the werewolves and learns who they attacked. The heal saves that player (herself included); the poison kills any one player unless they are protected. May use both on the same night.",
+      "nightAction": "See who was attacked, then heal and/or poison"
     },
     "hunter": {
       "name": "Hunter",
-      "description": "If eliminated, the Hunter can immediately eliminate another player."
-    },
-    "wolfCub": {
-      "name": "Wolf Cub",
-      "description": "A young werewolf. If eliminated, the werewolves get an extra kill the next night."
+      "description": "When the Hunter dies (bitten, voted out or poisoned), they immediately shoot one player, who dies too. They may choose not to shoot."
     },
     "spellcaster": {
       "name": "Spellcaster",
-      "description": "Each night, can silence one player who will not be able to vote the next day."
+      "description": "Each night, silence one other player. The next day that player may not speak or vote, but can still be voted out.",
+      "nightAction": "Pick one player to silence tomorrow"
+    },
+    "huntress": {
+      "name": "Huntress",
+      "description": "Village team. Once per game, at night, she may kill one player (a protected player survives). The moderator calls her every night, even after she has used it, so nobody can tell.",
+      "nightAction": "Kill one player, or skip (once per game)"
+    },
+    "tough-guy": {
+      "name": "Tough Guy",
+      "description": "Village team. If the werewolves bite him and nobody saves him, he does not die yet: he lives through the next day and can vote, then dies at the following dawn."
+    },
+    "doppelganger": {
+      "name": "Doppelgänger",
+      "description": "On the first night, pick one player. When that player dies, you secretly take over their role and team (pick a werewolf and you become one). Until then you count as village. The moderator will tell you when you change.",
+      "nightAction": "First night: pick the player you will copy when they die"
+    },
+    "tanner": {
+      "name": "Tanner",
+      "description": "Sick of life and on nobody's side. Wins alone, and the game ends, if the village votes him out. Dying any other way is a loss. The Seer sees him as not a werewolf."
     }
   },
   "roleReveal": {
@@ -117,39 +145,54 @@
     "waitingForPlayers": "Waiting for all players...",
     "alreadyViewed": "You've already viewed this role",
     "roleSet": "Role has been set",
-    "gameBegins": "The game begins!"
+    "gameBegins": "The game begins!",
+    "roleOf": "{{player}}'s role"
   },
   "night": {
     "title": "Night Phase",
     "wakeUpMessage": "{{role}}, wake up!",
-    "action": "Choose a player to {{action}}:",
-    "confirmAction": "Confirm {{action}}",
     "nightSummary": "Night Summary",
     "proceedToDay": "Proceed to Day Phase",
-    "noRolesWithNightActions": "No roles have night actions. Proceeding to day phase...",
+    "noRolesWithNightActions": "No living role wakes up tonight.",
     "nightComplete": "Night Phase Complete",
     "allActionsCompleted": "All night actions have been completed. Dawn approaches...",
-    "noNightAction": "This role has no night action.",
-    "alreadyUsedAbility": "You have already used your ability this night.",
     "stepProgress": "Step {{current}} of {{total}}",
     "seerResult": "Seer Result",
     "isGood": "is Good (Village Team)",
     "isBad": "is Bad (Werewolf Team)",
     "selectTarget": "Select a target",
-    "allActivePlayers": "All Active Players"
+    "holders": "Players: {{names}}",
+    "extraKill": "The Wolf Cub died: pick 2 victims tonight",
+    "witchAttacked": "Werewolves attacked: {{players}}",
+    "witchNoAttack": "The werewolves attacked no one",
+    "witchSave": "Heal {{player}}",
+    "witchPoisonPick": "Poison (optional): pick a player below",
+    "healUsed": "Heal potion already used",
+    "poisonUsed": "Poison already used",
+    "timeUp": "Night phase time is up!",
+    "huntressUsed": "Already used her shot. Keep calling her anyway so nobody can tell.",
+    "doppelMarker": "(Doppelgänger)",
+    "doppelChanged": "Doppelgänger {{player}} is now {{role}}. Tell them secretly."
   },
   "day": {
     "title": "Day Phase",
     "nightResults": "Night Results",
     "noOneEliminated": "No one was eliminated tonight.",
-    "playerEliminated": "{{player}} was eliminated during the night.",
-    "playersEliminated": "The following players were eliminated during the night: {{players}}",
-    "witchPoison": "The Witch used a poison potion on {{player}}",
-    "spellcasterSilence": "The Spellcaster has silenced {{player}}. They cannot vote or participate in discussions today.",
+    "playersEliminated": "Died last night: {{players}}",
     "villageDiscussion": "Village Discussion",
-    "discussionDescription": "The village must decide who to eliminate. Discuss and then vote.",
+    "discussionDescription": "Discuss, then vote. The majority may eliminate one player, or no one.",
     "proceedToNight": "Proceed to Night Phase",
-    "eliminate": "Eliminate"
+    "eliminate": "Eliminate",
+    "timeUp": "Day phase time is up!",
+    "silenced": "{{players}} must stay silent today: no talking, no voting (can still be voted out)",
+    "hunterTitle": "The Hunter's last shot",
+    "hunterPrompt": "{{player}} was the Hunter. Pick who they take down with them.",
+    "hunterShoot": "Shoot",
+    "hunterPass": "Don't shoot",
+    "confirmLynch": "Eliminate {{player}}?",
+    "confirmLynchDescription": "The village can eliminate only one player per day. This cannot be undone.",
+    "lynched": "{{player}} was eliminated by the village",
+    "alreadyLynched": "The village has voted today. Go to night when ready."
   },
   "result": {
     "title": "Game Over",
@@ -162,11 +205,18 @@
     "survived": "Survived",
     "eliminated": "Eliminated",
     "noWerewolves": "No werewolves in this game",
-    "thanksMessage": "Thank you for playing! Hope you enjoyed the game."
+    "thanksMessage": "Thank you for playing! Hope you enjoyed the game.",
+    "tannerWin": "The Tanner wins!",
+    "tannerWinDescription": "The village voted out the Tanner, which is exactly what he wanted."
   },
   "language": {
     "select": "Select Language",
     "en": "English",
     "th": "Thai (ไทย)"
+  },
+  "teams": {
+    "village": "Village",
+    "werewolves": "Werewolves",
+    "neutral": "Own side"
   }
 }
