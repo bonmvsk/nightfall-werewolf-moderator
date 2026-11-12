@@ -77,8 +77,8 @@ export function nightCandidates(role: PlayerRole, players: Player[], previousNig
   const lastTarget = previousNightActions.find(a => a.roleId === role)?.targetId;
   switch (role) {
     case 'werewolf': return alive.filter(p => !isWolf(p.role));
-    case 'doctor': return alive.filter(p => p.id !== lastTarget);
-    case 'bodyguard': return alive.filter(p => p.role !== 'bodyguard' && p.id !== lastTarget);
+    case 'doctor':
+    case 'bodyguard': return alive.filter(p => p.id !== lastTarget); // self allowed, no repeat
     case 'witch': return alive;
     default: return alive.filter(p => p.role !== role); // seer, spellcaster, huntress, doppelganger: not themselves
   }

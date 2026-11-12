@@ -63,8 +63,8 @@ ok(dead(g).join() === 'p1,p2,p3' && !g.wolfExtraKill, 'two bites land, bonus con
 // Target rules
 const ps = game(['werewolf', 'wolf-cub', 'bodyguard', 'villager']).players;
 ok(nightCandidates('werewolf', ps, []).map(p => p.id).join() === 'p2,p3', 'wolves cannot bite wolves');
-ok(nightCandidates('bodyguard', ps, [act('bodyguard', 'protect', 'p3')]).map(p => p.id).join() === 'p0,p1',
-  'bodyguard: not self, not last night target');
+ok(nightCandidates('bodyguard', ps, [act('bodyguard', 'protect', 'p3')]).map(p => p.id).join() === 'p0,p1,p2',
+  'bodyguard: may guard self, not last night target');
 
 // Every recommended setup is legal and survives the first night kill
 for (let n = 5; n <= 20; n++) {
