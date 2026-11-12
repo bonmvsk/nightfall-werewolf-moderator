@@ -1,5 +1,4 @@
 
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";
@@ -11,9 +10,9 @@ import RoleSelector from "./RoleSelector";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import LanguageSelector from "./LanguageSelector";
+import { GameMode } from "@/lib/types";
 
 const GameSetup = () => {
-  const navigate = useNavigate();
   const { gameState, addPlayer, removePlayer, setGameMode, startGame } = useGame();
   const [playerName, setPlayerName] = useState("");
   const { t } = useTranslation();
@@ -23,43 +22,8 @@ const GameSetup = () => {
       addPlayer(playerName);
       setPlayerName("");
     } else {
-      toast.error(t('setup.playerName'));
+      toast.error(t('setup.emptyName'));
     }
-  };
-  
-  const handleStartGame = () => {
-    if (gameState.players.length < 5) {
-      toast.error(t('setup.needMorePlayers'));
-      return;
-    }
-    
-    // For system mode, check if selected roles match player count
-    if (gameState.gameMode === 'system') {
-      // Get all selected roles from the DOM and count their quantities
-      const selectedRoleElements = document.querySelectorAll('[data-role-selected="true"]');
-      
-      // Calculate total selected roles by summing all role counts
-      let totalRolesCount = 0;
-      selectedRoleElements.forEach(element => {
-        const countStr = element.getAttribute('data-role-count');
-        if (countStr) {
-          totalRolesCount += parseInt(countStr, 10);
-        }
-      });
-      
-      if (totalRolesCount !== gameState.players.length) {
-        toast.error(
-          t('setup.rolesMismatch', { 
-            count: gameState.players.length, 
-            selected: totalRolesCount 
-          })
-        );
-        return;
-      }
-    }
-    
-    startGame();
-    navigate("/role-reveal");
   };
   
   return (
@@ -101,7 +65,7 @@ const GameSetup = () => {
                 {gameState.players.map(player => (
                   <div key={player.id} className="flex">
                     <div className="flex-grow">
-                      <PlayerCard player={player} hideRoleButton={true} />
+                      <PlayerCard player={player} />
                     </div>
                     <Button 
                       variant="destructive" 
@@ -130,7 +94,7 @@ const GameSetup = () => {
             <h3 className="text-lg font-medium mb-3">{t('setup.gameMode')}</h3>
             <Tabs 
               defaultValue={gameState.gameMode} 
-              onValueChange={(value) => setGameMode(value as any)}
+              onValueChange={(value) => setGameMode(value as GameMode)}
             >
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="system">{t('setup.systemMode')}</TabsTrigger>
@@ -169,7 +133,7 @@ const GameSetup = () => {
       
       <div className="mt-8 flex justify-center">
         <Button 
-          onClick={handleStartGame}
+          onClick={startGame}
           disabled={gameState.players.length < 5}
           size="lg"
           className="btn-primary px-8 py-6 text-lg"

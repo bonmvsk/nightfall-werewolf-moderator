@@ -1,15 +1,14 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Eye, CheckCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ROLES } from "@/lib/game-data";
+import { isWolf, ROLES } from "@/lib/game-data";
 import { PlayerRole } from "@/lib/types";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 const RoleReveal = () => {
@@ -18,7 +17,6 @@ const RoleReveal = () => {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [revealedPlayers, setRevealedPlayers] = useState<Set<string>>(new Set());
-  const navigate = useNavigate();
   
   const handleRoleView = (playerId: string) => {
     if (revealedPlayers.has(playerId)) {
@@ -47,32 +45,21 @@ const RoleReveal = () => {
   
   const handleStartGame = () => {
     startNightPhase();
-    navigate("/");
     toast.success(t('roleReveal.gameBegins'));
   };
   
   const selectedPlayer = selectedPlayerId ? 
     gameState.players.find(p => p.id === selectedPlayerId) : null;
   
-  const isWerewolf = selectedPlayer?.role === 'werewolf';
+  const isWerewolf = isWolf(selectedPlayer?.role);
   
-  const getAvailableRoles = () => {
-    const allRoles = Object.keys(ROLES) as PlayerRole[];
-    
-    if (gameState.gameMode === 'system') {
-      return allRoles;
-    } else {
-      const assignedRoles = gameState.players
-        .filter(p => p.role && revealedPlayers.has(p.id))
-        .map(p => p.role as PlayerRole);
-      
-      const roleCounts: Record<string, number> = {};
-      assignedRoles.forEach(role => {
-        roleCounts[role] = (roleCounts[role] || 0) + 1;
-      });
-      
-      return allRoles;
-    }
+  // Cards mode: only offer cards still left in the chosen deck (plus the player's current pick).
+  const getAvailableRoles = (playerId: string) => {
+    const left = [...gameState.roleSetup];
+    gameState.players.forEach(p => {
+      if (p.id !== playerId && p.role && revealedPlayers.has(p.id)) left.splice(left.indexOf(p.role), 1);
+    });
+    return [...new Set(left)];
   };
   
   return (
@@ -143,7 +130,7 @@ const RoleReveal = () => {
                           <SelectValue placeholder={t('roleReveal.selectRole')} />
                         </SelectTrigger>
                         <SelectContent>
-                          {getAvailableRoles().map(role => (
+                          {getAvailableRoles(player.id).map(role => (
                             <SelectItem key={role} value={role}>
                               {t(`roles.${role}.name`)}
                             </SelectItem>
@@ -180,7 +167,7 @@ const RoleReveal = () => {
       }}>
         <DialogContent className="bg-night border-moonlight/20 max-w-md">
           <DialogHeader>
-            <DialogTitle>{selectedPlayer?.name}'s {t('common.role')}</DialogTitle>
+            <DialogTitle>{t('roleReveal.roleOf', { player: selectedPlayer?.name })}</DialogTitle>
           </DialogHeader>
           
           {selectedPlayer?.role && (
@@ -202,7 +189,7 @@ const RoleReveal = () => {
               
               <div className={`inline-block px-3 py-1 rounded-full text-sm
                 ${isWerewolf ? 'bg-werewolf/30 text-red-300' : 'bg-blue-900/30 text-blue-300'}`}>
-                {t('common.team')}: {isWerewolf ? t('common.werewolves') : t('common.village')}
+                {t('common.team')}: {t(`teams.${ROLES[selectedPlayer.role].team}`)}
               </div>
               
               <Button className="mt-6" onClick={() => setRoleDialogOpen(false)}>

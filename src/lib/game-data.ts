@@ -1,154 +1,165 @@
+// Pure game rules. No React, no "@/" imports: game-data.check.ts runs this file directly with node.
+import type { GameState, NightAction, NightActionType, Player, PlayerRole, Team } from "./types";
 
-import { PlayerRole } from "./types";
-
-export const ROLES: Record<PlayerRole, {
-  name: string;
-  description: string;
-  nightAction?: string;
-  team: 'village' | 'werewolves';
-  nightPriority?: number;
-}> = {
-  werewolf: {
-    name: "Werewolf",
-    description: "Each night, choose a player to eliminate. Win when werewolves equal or outnumber villagers.",
-    nightAction: "Choose a player to eliminate",
-    team: 'werewolves',
-    nightPriority: 2
-  },
-  villager: {
-    name: "Villager",
-    description: "You have no special abilities, but must use deduction to identify the werewolves.",
-    team: 'village'
-  },
-  seer: {
-    name: "Seer",
-    description: "Each night, you may look at one player's card to learn their role.",
-    nightAction: "Choose a player to identify",
-    team: 'village',
-    nightPriority: 1
-  },
-  doctor: {
-    name: "Doctor",
-    description: "Each night, choose one player (including yourself) to protect from elimination.",
-    nightAction: "Choose a player to protect",
-    team: 'village',
-    nightPriority: 3
-  },
-  bodyguard: {
-    name: "Bodyguard",
-    description: "Each night, choose one player (excluding yourself) to protect from elimination.",
-    nightAction: "Choose a player to protect",
-    team: 'village',
-    nightPriority: 3
-  },
-  hunter: {
-    name: "Hunter",
-    description: "If you are eliminated, you may immediately eliminate another player.",
-    team: 'village'
-  },
-  witch: {
-    name: "Witch",
-    description: "You have two potions: one to save a player targeted by werewolves, and one to eliminate a player. Each can be used once per game.",
-    nightAction: "Use save potion or poison potion",
-    team: 'village',
-    nightPriority: 4
-  },
-  "wolf-cub": {
-    name: "Wolf Cub",
-    description: "Part of the werewolf team. If eliminated, the werewolves get two kills the following night.",
-    team: 'werewolves',
-    nightPriority: 2
-  },
-  "spellcaster": {
-    name: "Spellcaster",
-    description: "Each night, choose one player to silence during the next day. They cannot vote or participate in discussions.",
-    nightAction: "Choose a player to silence",
-    team: 'village',
-    nightPriority: 5
-  }
+// Role names, descriptions and night prompts live in src/i18n/locales/*.json under roles.<id>.
+export const ROLES: Record<PlayerRole, { team: Team; night?: NightActionType }> = {
+  werewolf: { team: 'werewolves', night: 'kill' },
+  'wolf-cub': { team: 'werewolves' }, // wakes in the werewolf step
+  villager: { team: 'village' },
+  seer: { team: 'village', night: 'view' },
+  doctor: { team: 'village', night: 'heal' },
+  bodyguard: { team: 'village', night: 'protect' },
+  witch: { team: 'village', night: 'poison' }, // plus 'save' on the wolves' victim
+  hunter: { team: 'village' },
+  spellcaster: { team: 'village', night: 'silence' },
+  huntress: { team: 'village', night: 'shoot' }, // once per game, still called every night
+  'tough-guy': { team: 'village' },
+  doppelganger: { team: 'village', night: 'copy' }, // village until the copied player dies
+  tanner: { team: 'neutral' },
 };
 
-export const ROLE_RECOMMENDATIONS: Record<number, PlayerRole[]> = {
-  5: ['werewolf', 'werewolf', 'villager', 'villager', 'seer'],
-  6: ['werewolf', 'werewolf', 'villager', 'villager', 'seer', 'doctor'],
-  7: ['werewolf', 'werewolf', 'villager', 'villager', 'villager', 'seer', 'doctor'],
-  8: ['werewolf', 'werewolf', 'villager', 'villager', 'villager', 'villager', 'seer', 'doctor'],
-  9: ['werewolf', 'werewolf', 'werewolf', 'villager', 'villager', 'villager', 'villager', 'seer', 'doctor'],
-  10: ['werewolf', 'werewolf', 'werewolf', 'villager', 'villager', 'villager', 'villager', 'villager', 'seer', 'doctor'],
-  11: ['werewolf', 'werewolf', 'werewolf', 'villager', 'villager', 'villager', 'villager', 'villager', 'villager', 'seer', 'doctor'],
-  12: ['werewolf', 'werewolf', 'werewolf', 'villager', 'villager', 'villager', 'villager', 'villager', 'villager', 'seer', 'doctor', 'bodyguard'],
-  13: ['werewolf', 'werewolf', 'werewolf', 'werewolf', 'villager', 'villager', 'villager', 'villager', 'villager', 'villager', 'seer', 'doctor', 'bodyguard'],
-  14: ['werewolf', 'werewolf', 'werewolf', 'werewolf', 'villager', 'villager', 'villager', 'villager', 'villager', 'villager', 'villager', 'seer', 'doctor', 'bodyguard'],
-  15: ['werewolf', 'werewolf', 'werewolf', 'werewolf', 'villager', 'villager', 'villager', 'villager', 'villager', 'villager', 'villager', 'villager', 'seer', 'doctor', 'witch'],
-};
+// Wake order. Witch must come after the werewolves so she knows who was attacked.
+export const NIGHT_ORDER: PlayerRole[] = ['doppelganger', 'seer', 'werewolf', 'doctor', 'bodyguard', 'witch', 'huntress', 'spellcaster'];
 
 export const DEFAULT_TIMER_SETTINGS: { day: number; night: number } = {
   day: 300, // 5 minutes in seconds
   night: 60 // 1 minute in seconds
 };
 
+export const isWolf = (role: PlayerRole | null | undefined) => !!role && ROLES[role].team === 'werewolves';
+
 export function getRecommendedRoles(playerCount: number): PlayerRole[] {
-  // Use the predefined recommendations or create a balanced set
-  if (ROLE_RECOMMENDATIONS[playerCount]) {
-    return ROLE_RECOMMENDATIONS[playerCount];
-  }
-  
-  // For undefined player counts, create a balanced role set
-  // Base rule: 1/3 werewolves, at least 1 seer, 1 doctor if > 6 players
-  const werewolfCount = Math.max(1, Math.floor(playerCount / 3));
-  const specialRoles: PlayerRole[] = ['seer'];
-  
-  if (playerCount > 6) {
-    specialRoles.push('doctor');
-  }
-  if (playerCount > 10) {
-    specialRoles.push('witch');
-  }
-  if (playerCount > 12) {
-    specialRoles.push('bodyguard');
-  }
-  if (playerCount > 14) {
-    specialRoles.push('spellcaster');
-  }
-  
-  const villagerCount = playerCount - werewolfCount - specialRoles.length;
-  
-  const roles: PlayerRole[] = [
-    ...Array(werewolfCount).fill('werewolf'),
-    ...Array(villagerCount).fill('villager'),
-    ...specialRoles
-  ] as PlayerRole[];
-  
-  return roles;
+  // ponytail: ~1 wolf per 4 players, fixed thresholds for specials; tune here if games feel lopsided
+  const wolfCount = Math.max(1, Math.floor((playerCount + 1) / 4));
+  const wolves: PlayerRole[] = Array(wolfCount).fill('werewolf');
+  if (playerCount >= 11) wolves[0] = 'wolf-cub';
+
+  const specials: PlayerRole[] = ['seer'];
+  if (playerCount >= 6) specials.push('doctor');
+  if (playerCount >= 8) specials.push('hunter');
+  if (playerCount >= 10) specials.push('witch');
+  if (playerCount >= 12) specials.push('bodyguard');
+  if (playerCount >= 14) specials.push('spellcaster');
+
+  const villagers: PlayerRole[] = Array(Math.max(0, playerCount - wolfCount - specials.length)).fill('villager');
+  return [...wolves, ...specials, ...villagers].slice(0, playerCount);
 }
 
-export function getNightActionOrder(players: PlayerRole[]): PlayerRole[] {
-  const rolesWithActions = Object.entries(ROLES)
-    .filter(([_, roleData]) => roleData.nightPriority !== undefined)
-    .filter(([role]) => players.includes(role as PlayerRole))
-    .sort((a, b) => (a[1].nightPriority || 99) - (b[1].nightPriority || 99))
-    .map(([role]) => role as PlayerRole);
-  
-  return rolesWithActions;
-}
-
-// Helper to check if game is over and who won
-export function checkWinCondition(players: {role: PlayerRole | null, status: string}[]): 'villagers' | 'werewolves' | null {
-  const alivePlayers = players.filter(p => p.status === 'alive' && p.role);
-  
-  const aliveWerewolves = alivePlayers.filter(p => p.role === 'werewolf').length;
-  const aliveVillagers = alivePlayers.filter(p => p.role !== 'werewolf').length;
-  
-  // Werewolves win when they equal or outnumber villagers
-  if (aliveWerewolves >= aliveVillagers) {
-    return 'werewolves';
-  }
-  
-  // Villagers win when all werewolves are eliminated
-  if (aliveWerewolves === 0) {
-    return 'villagers';
-  }
-  
-  // Game continues
+// Returns an i18n key under "setup." when the role list can't start a game, else null.
+export function roleSetupError(roles: PlayerRole[], playerCount: number): string | null {
+  if (playerCount < 5) return 'needMorePlayers';
+  if (roles.length !== playerCount) return 'rolesMismatch';
+  const wolves = roles.filter(isWolf).length;
+  if (wolves === 0 || wolves >= roles.length - wolves) return 'badWolfCount';
   return null;
+}
+
+export function shuffle<T>(items: T[]): T[] {
+  const a = [...items];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Night steps for the living roles. Wolf cub wakes in the werewolf step; a doppelganger only until it has picked.
+export function getNightActionOrder(players: Player[], doppelgangers: Record<string, string> = {}): PlayerRole[] {
+  const awake = new Set(players
+    .filter(p => p.status === 'alive' && p.role && !(p.role === 'doppelganger' && doppelgangers[p.id]))
+    .map(p => (isWolf(p.role) ? 'werewolf' : p.role)));
+  return NIGHT_ORDER.filter(r => awake.has(r));
+}
+
+// Who a role may target tonight.
+export function nightCandidates(role: PlayerRole, players: Player[], previousNightActions: NightAction[]): Player[] {
+  const alive = players.filter(p => p.status === 'alive');
+  const lastTarget = previousNightActions.find(a => a.roleId === role)?.targetId;
+  switch (role) {
+    case 'werewolf': return alive.filter(p => !isWolf(p.role));
+    case 'doctor': return alive.filter(p => p.id !== lastTarget);
+    case 'bodyguard': return alive.filter(p => p.role !== 'bodyguard' && p.id !== lastTarget);
+    case 'witch': return alive;
+    default: return alive.filter(p => p.role !== role); // seer, spellcaster, huntress, doppelganger: not themselves
+  }
+}
+
+export function checkWinCondition(players: { role: PlayerRole | null, status: string }[]): 'villagers' | 'werewolves' | null {
+  const alive = players.filter(p => p.status === 'alive' && p.role);
+  const wolves = alive.filter(p => isWolf(p.role)).length;
+  if (wolves === 0) return 'villagers';
+  if (wolves >= alive.length - wolves) return 'werewolves';
+  return null;
+}
+
+// Kills the living players in ids. A surviving doppelganger whose pick died takes over that role.
+function applyDeaths(players: Player[], ids: string[], doppelgangers: Record<string, string>) {
+  const dying = players.filter(p => p.status === 'alive' && ids.includes(p.id));
+  const byId = new Map(dying.map(p => [p.id, p]));
+  return {
+    players: players.map(p => {
+      if (byId.has(p.id)) return { ...p, status: 'dead' as const, silenced: false };
+      const copied = byId.get(doppelgangers[p.id]);
+      return p.status === 'alive' && p.role === 'doppelganger' && copied ? { ...p, role: copied.role } : p;
+    }),
+    dyingIds: dying.map(p => p.id),
+    hunters: dying.filter(p => p.role === 'hunter').map(p => p.id),
+    cubDied: dying.some(p => p.role === 'wolf-cub'),
+  };
+}
+
+function killNow(s: GameState, ids: string[], hunterQueue: string[]): Partial<GameState> {
+  const d = applyDeaths(s.players, ids, s.doppelgangers);
+  return {
+    players: d.players,
+    pendingHunters: [...hunterQueue, ...d.hunters],
+    wolfExtraKill: s.wolfExtraKill || d.cubDied,
+  };
+}
+
+// Village vote: one per day. Voting out the Tanner ends the game in their favour.
+export function lynch(s: GameState, playerId: string): Partial<GameState> {
+  const result: Partial<GameState> = { ...killNow(s, [playerId], s.pendingHunters), lynchedToday: true };
+  const tanner = s.players.find(p => p.id === playerId)?.role === 'tanner';
+  return tanner ? { ...result, winner: 'tanner', gamePhase: 'result', dayTimerActive: false } : result;
+}
+
+// First pending hunter fires (or passes with null). A shot hunter queues up next.
+export const hunterShot = (s: GameState, targetId: string | null): Partial<GameState> =>
+  killNow(s, targetId ? [targetId] : [], s.pendingHunters.slice(1));
+
+// Dawn: a protected player survives every night kill (Ultimate Werewolf TH rule).
+// A Tough Guy's delayed death from an earlier bite cannot be prevented.
+export function resolveNight(s: GameState): Partial<GameState> {
+  const targets = (type: NightActionType) => s.nightActions.filter(a => a.actionType === type).map(a => a.targetId);
+  const shielded = new Set([...targets('heal'), ...targets('protect'), ...targets('save')]);
+  const unshielded = (ids: string[]) => ids.filter(id => !shielded.has(id));
+  const bites = unshielded(targets('kill'));
+  const isToughGuy = (id: string) => s.players.find(p => p.id === id)?.role === 'tough-guy';
+  const deaths = [...bites.filter(id => !isToughGuy(id)), ...unshielded([...targets('poison'), ...targets('shoot')]), ...s.toughGuyDoomed];
+  const silenced = new Set(targets('silence'));
+
+  // ponytail: doppelgangers link in wake order to the copy picks; one pick per night is the normal case
+  const doppelgangers = { ...s.doppelgangers };
+  const unlinked = s.players.filter(p => p.role === 'doppelganger' && p.status === 'alive' && !doppelgangers[p.id]);
+  targets('copy').forEach((id, i) => { if (unlinked[i]) doppelgangers[unlinked[i].id] = id; });
+
+  const d = applyDeaths(s.players, deaths, doppelgangers);
+
+  return {
+    players: d.players.map(p => ({ ...p, silenced: p.status === 'alive' && silenced.has(p.id) })),
+    eliminatedLastNight: d.dyingIds,
+    pendingHunters: d.hunters,
+    wolfExtraKill: d.cubDied, // tonight's bonus kill (if any) is used up
+    toughGuyDoomed: bites.filter(id => isToughGuy(id) && !d.dyingIds.includes(id)),
+    doppelgangers,
+    huntressShotUsed: s.huntressShotUsed || targets('shoot').length > 0,
+    witchPotions: {
+      heal: s.witchPotions.heal && targets('save').length === 0,
+      poison: s.witchPotions.poison && targets('poison').length === 0,
+    },
+    previousNightActions: s.nightActions,
+    lynchedToday: false,
+    gamePhase: 'day',
+  };
 }
