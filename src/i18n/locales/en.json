@@ -87,8 +87,8 @@
     },
     "bodyguard": {
       "name": "Bodyguard",
-      "description": "Each night, guard one other player: they cannot die that night in any way (bite, poison or Huntress). Cannot guard themself or the same player two nights in a row.",
-      "nightAction": "Pick one other player to guard (not last night's)"
+      "description": "Each night, guard one player: they cannot die that night in any way (bite, poison or Huntress). May guard themself, but not the same player two nights in a row.",
+      "nightAction": "Pick one player to guard (not last night's)"
     },
     "witch": {
       "name": "Witch",
