@@ -169,7 +169,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const startGame = () => {
     const { players, roleSetup, gameMode } = gameState;
-    const error = roleSetupError(roleSetup, players.length);
+    // Cards mode picks roles freely at reveal; the wolf-count check runs there.
+    const error = gameMode === 'cards'
+      ? (players.length < 5 ? 'needMorePlayers' : null)
+      : roleSetupError(roleSetup, players.length);
     if (error) {
       toast.error(i18n.t(`setup.${error}`, { count: players.length, selected: roleSetup.length }));
       return;

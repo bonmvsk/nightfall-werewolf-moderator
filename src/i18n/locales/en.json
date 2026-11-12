@@ -47,7 +47,7 @@
     "systemMode": "System Random Assignment",
     "systemDescription": "The system will randomly assign roles to each player. Each player can view their role privately.",
     "cardsMode": "Player-drawn Cards",
-    "cardsDescription": "The system will only show which roles are in play. Players use physical cards to determine roles.",
+    "cardsDescription": "Players draw physical cards, then each one picks their role from the full list. Any roles, any mix.",
     "roleDistribution": "Role Distribution",
     "startGame": "Start Game",
     "needMorePlayers": "You need at least 5 players to start the game",
@@ -144,7 +144,6 @@
     "startGame": "Start Game",
     "waitingForPlayers": "Waiting for all players...",
     "alreadyViewed": "You've already viewed this role",
-    "roleSet": "Role has been set",
     "gameBegins": "The game begins!",
     "roleOf": "{{player}}'s role"
   },

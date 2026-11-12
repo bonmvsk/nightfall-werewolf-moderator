@@ -125,7 +125,7 @@ const GameSetup = () => {
             </Tabs>
           </div>
           
-          {gameState.players.length >= 5 && (
+          {gameState.gameMode === 'system' && gameState.players.length >= 5 && (
             <RoleSelector />
           )}
         </CardContent>

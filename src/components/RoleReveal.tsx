@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Eye, CheckCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { isWolf, ROLES } from "@/lib/game-data";
-import { PlayerRole } from "@/lib/types";
+import { isWolf, roleSetupError, ROLES } from "@/lib/game-data";
+import { Player, PlayerRole } from "@/lib/types";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslation } from "react-i18next";
@@ -33,17 +33,20 @@ const RoleReveal = () => {
     }
   };
   
-  const handleCardModeRoleSelect = (playerId: string, role: PlayerRole) => {
-    updatePlayerRole(playerId, role);
-    setRevealedPlayers(prev => new Set([...prev, playerId]));
-    toast.success(t('roleReveal.roleSet'));
-  };
-  
-  const allPlayersRevealed = gameState.players.every(player => 
-    revealedPlayers.has(player.id)
-  );
+  // System mode: player has seen their role. Cards mode: a role has been picked (can still be changed).
+  const isDone = (player: Player) =>
+    gameState.gameMode === 'system' ? revealedPlayers.has(player.id) : !!player.role;
+  const allPlayersRevealed = gameState.players.every(isDone);
   
   const handleStartGame = () => {
+    if (gameState.gameMode === 'cards') {
+      const roles = gameState.players.map(p => p.role as PlayerRole);
+      const error = roleSetupError(roles, roles.length);
+      if (error) {
+        toast.error(t(`setup.${error}`, { count: roles.length, selected: roles.length }));
+        return;
+      }
+    }
     startNightPhase();
     toast.success(t('roleReveal.gameBegins'));
   };
@@ -52,15 +55,6 @@ const RoleReveal = () => {
     gameState.players.find(p => p.id === selectedPlayerId) : null;
   
   const isWerewolf = isWolf(selectedPlayer?.role);
-  
-  // Cards mode: only offer cards still left in the chosen deck (plus the player's current pick).
-  const getAvailableRoles = (playerId: string) => {
-    const left = [...gameState.roleSetup];
-    gameState.players.forEach(p => {
-      if (p.id !== playerId && p.role && revealedPlayers.has(p.id)) left.splice(left.indexOf(p.role), 1);
-    });
-    return [...new Set(left)];
-  };
   
   return (
     <div className="container mx-auto px-4 max-w-4xl py-8 animate-fade-in">
@@ -86,11 +80,11 @@ const RoleReveal = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {gameState.players.map(player => (
-              <Card key={player.id} className={`relative ${revealedPlayers.has(player.id) ? 'opacity-75' : ''}`}>
+              <Card key={player.id} className={`relative ${isDone(player) ? 'opacity-75' : ''}`}>
                 <CardContent className="p-4 flex justify-between items-center">
                   <div>
                     <h3 className="font-bold">{player.name}</h3>
-                    {revealedPlayers.has(player.id) && (
+                    {isDone(player) && (
                       <p className="text-sm text-green-500 flex items-center gap-1 mt-1">
                         <CheckCheck className="h-4 w-4" />
                         {gameState.gameMode === 'system' 
@@ -103,11 +97,11 @@ const RoleReveal = () => {
                   {gameState.gameMode === 'system' ? (
                     <Button 
                       onClick={() => handleRoleView(player.id)}
-                      disabled={revealedPlayers.has(player.id)}
-                      variant={revealedPlayers.has(player.id) ? "secondary" : "default"}
+                      disabled={isDone(player)}
+                      variant={isDone(player) ? "secondary" : "default"}
                       className="flex items-center gap-1"
                     >
-                      {revealedPlayers.has(player.id) ? (
+                      {isDone(player) ? (
                         <>
                           <CheckCheck className="h-4 w-4" />
                           <span>{t('roleReveal.viewed')}</span>
@@ -120,24 +114,21 @@ const RoleReveal = () => {
                       )}
                     </Button>
                   ) : (
-                    revealedPlayers.has(player.id) ? (
-                      <div className="text-sm bg-primary/20 px-3 py-1 rounded-full">
-                        {t('roleReveal.roleSelected')}
-                      </div>
-                    ) : (
-                      <Select onValueChange={(value) => handleCardModeRoleSelect(player.id, value as PlayerRole)}>
-                        <SelectTrigger className="w-36">
-                          <SelectValue placeholder={t('roleReveal.selectRole')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {getAvailableRoles(player.id).map(role => (
-                            <SelectItem key={role} value={role}>
-                              {t(`roles.${role}.name`)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )
+                    <Select
+                      value={player.role ?? undefined}
+                      onValueChange={(value) => updatePlayerRole(player.id, value as PlayerRole)}
+                    >
+                      <SelectTrigger className="w-36">
+                        <SelectValue placeholder={t('roleReveal.selectRole')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(ROLES) as PlayerRole[]).map(role => (
+                          <SelectItem key={role} value={role}>
+                            {t(`roles.${role}.name`)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
                 </CardContent>
               </Card>
