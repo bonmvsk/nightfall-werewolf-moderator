@@ -26,9 +26,20 @@ ok(checkWinCondition(game(['wolf-cub', 'villager']).players) === 'werewolves', '
 ok(checkWinCondition(game(['wolf-cub', 'villager', 'seer']).players) === null, 'cub 1 v 2 continues');
 ok(checkWinCondition([]) === 'villagers', '0 v 0 is not a wolf win');
 
-// Wolf cub wakes with the werewolves
-ok(getNightActionOrder(game(['wolf-cub', 'villager', 'seer', 'witch', 'doppelganger']).players).join() === 'doppelganger,seer,werewolf,witch', 'night order');
-ok(!getNightActionOrder(game(['doppelganger', 'werewolf']).players, { p0: 'p1' }).includes('doppelganger'), 'doppelganger wakes only until it picks');
+// Night order: every dealt night role every night; '*' = fake call (nobody can act). Wolf cub wakes with the wolves.
+const order = (s: GameState) => getNightActionOrder(s.players, s.doppelgangers).map(x => x.role + (x.fake ? '*' : '')).join();
+const kill = (s: GameState, ...ids: string[]): GameState =>
+  ({ ...s, players: s.players.map(p => (ids.includes(p.id) ? { ...p, status: 'dead' as const } : p)) });
+ok(order(game(['wolf-cub', 'villager', 'seer', 'witch', 'doppelganger'])) === 'doppelganger,seer,werewolf,witch', 'night order');
+ok(order(kill(game(['werewolf', 'wolf-cub', 'seer', 'witch', 'villager']), 'p0', 'p2', 'p3')) === 'seer*,werewolf,witch*',
+  'dead roles still called (fake), lone wolf cub wakes for real');
+ok(order(game(['doppelganger', 'werewolf', 'villager'], { doppelgangers: { p0: 'p1' } })) === 'doppelganger*,werewolf',
+  'picked doppelganger still called (fake)');
+ok(order({ ...game([]), players: [
+  { id: 'p0', name: 'P0', role: 'seer', status: 'dead' },
+  { id: 'p1', name: 'P1', role: 'werewolf', status: 'alive' },
+  { id: 'p2', name: 'P2', role: 'seer', status: 'alive' }, // doppelganger that took over the dead seer
+], doppelgangers: { p2: 'p0' } }) === 'doppelganger*,seer,werewolf', 'doppelganger turned seer wakes as seer; its old step stays fake');
 
 // Witch save beats the bite, poison kills, both potions used up; protection also stops poison
 let s = resolveNight(game(['werewolf', 'doctor', 'witch', 'villager', 'villager'], {

@@ -13,7 +13,7 @@ import LanguageSelector from "./LanguageSelector";
 import { GameMode } from "@/lib/types";
 
 const GameSetup = () => {
-  const { gameState, addPlayer, removePlayer, setGameMode, startGame } = useGame();
+  const { gameState, addPlayer, removePlayer, clearPlayers, setGameMode, startGame } = useGame();
   const [playerName, setPlayerName] = useState("");
   const { t } = useTranslation();
   
@@ -58,9 +58,18 @@ const GameSetup = () => {
           
           {gameState.players.length > 0 && (
             <div>
-              <h3 className="text-lg font-medium mb-3">
-                {t('setup.playersList')} ({gameState.players.length})
-              </h3>
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <h3 className="text-lg font-medium">
+                  {t('setup.playersList')} ({gameState.players.length})
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.confirm(t('setup.clearPlayersConfirm')) && clearPlayers()}
+                >
+                  {t('setup.clearPlayers')}
+                </Button>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {gameState.players.map(player => (
                   <div key={player.id} className="flex">

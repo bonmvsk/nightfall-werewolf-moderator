@@ -15,6 +15,7 @@ const NightPhase = () => {
   const alive = players.filter(p => p.status === 'alive');
 
   // Wake order is fixed at dusk; deaths resolve at dawn, so everyone alive now gets their turn.
+  // Dead roles stay in as fake calls so the table can't tell who is gone.
   const [steps] = useState(() => getNightActionOrder(players, doppelgangers));
   const [stepIndex, setStepIndex] = useState(0);
   const [selected, setSelected] = useState<string[]>([]);
@@ -24,7 +25,6 @@ const NightPhase = () => {
     if (steps.length > 0) startTimer('night');
   }, []);
 
-  const role = steps[stepIndex];
   const done = stepIndex >= steps.length;
   const name = (id: string) => players.find(p => p.id === id)?.name;
 
@@ -52,12 +52,13 @@ const NightPhase = () => {
     );
   }
 
+  const { role, fake } = steps[stepIndex];
   const holders = alive.filter(p => (role === 'werewolf' ? isWolf(p.role) : p.role === role));
   const candidateIds = new Set(nightCandidates(role, players, previousNightActions).map(p => p.id));
   const maxPicks = role === 'werewolf' && wolfExtraKill ? 2 : 1;
   const seerLocked = role === 'seer' && selected.length > 0; // one look, no peeking at a second player
-  const optional = role === 'witch' || role === 'huntress'; // may pass without picking
-  const canPick = role === 'witch' ? witchPotions.poison : role === 'huntress' ? !huntressShotUsed : true;
+  const optional = fake || role === 'witch' || role === 'huntress'; // may pass without picking
+  const canPick = !fake && (role === 'witch' ? witchPotions.poison : role === 'huntress' ? !huntressShotUsed : true);
   const wolfVictims = nightActions.filter(a => a.actionType === 'kill').map(a => a.targetId);
 
   const togglePlayer = (id: string) => {
@@ -102,6 +103,9 @@ const NightPhase = () => {
         <CardHeader>
           <CardTitle>{t('night.wakeUpMessage', { role: t(`roles.${role}.name`) })}</CardTitle>
           <CardDescription>
+            {fake ? (
+              <span className="block text-amber-400">{t('night.fakeCall')}</span>
+            ) : (<>
             {t(`roles.${role}.nightAction`)}
             <span className="block mt-1 text-muted-foreground">
               {t('night.holders', {
@@ -114,6 +118,7 @@ const NightPhase = () => {
             {role === 'werewolf' && wolfExtraKill && (
               <span className="block mt-1 text-red-400">{t('night.extraKill')}</span>
             )}
+            </>)}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -122,9 +127,9 @@ const NightPhase = () => {
               {t('night.stepProgress', { current: stepIndex + 1, total: steps.length })}
             </span>
             <div className="flex items-center space-x-2">
-              {steps.map((r, i) => (
+              {steps.map((s, i) => (
                 <div
-                  key={r}
+                  key={s.role}
                   className={`w-3 h-3 rounded-full ${
                     i === stepIndex ? 'bg-primary animate-pulse-slow' : i < stepIndex ? 'bg-muted' : 'bg-muted/30'
                   }`}
@@ -133,7 +138,7 @@ const NightPhase = () => {
             </div>
           </div>
 
-          {role === 'witch' && (
+          {role === 'witch' && !fake && (
             <div className="mb-6 p-4 rounded-lg border border-moonlight/30 bg-night-dark space-y-3">
               <p className="flex items-center gap-2 font-semibold">
                 <HeartPulse className="h-5 w-5 text-green-400" />
