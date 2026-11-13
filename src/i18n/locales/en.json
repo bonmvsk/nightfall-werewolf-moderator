@@ -38,6 +38,8 @@
     "unknownRole": "Unknown Role"
   },
   "setup": {
+    "clearPlayersConfirm": "Remove all players?",
+    "clearPlayers": "Clear list",
     "title": "Werewolf Game Setup",
     "addPlayers": "Add Players",
     "playerName": "Enter player name",
@@ -148,6 +150,7 @@
     "roleOf": "{{player}}'s role"
   },
   "night": {
+    "fakeCall": "Nobody acts in this step anymore (dead, or already used). Call it as usual, wait a few seconds, then close eyes, so nobody can tell this role is gone.",
     "title": "Night Phase",
     "wakeUpMessage": "{{role}}, wake up!",
     "nightSummary": "Night Summary",

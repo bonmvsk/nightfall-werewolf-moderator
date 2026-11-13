@@ -15,6 +15,7 @@ interface GameContextType {
   timerSettings: TimerSettings;
   addPlayer: (name: string) => void;
   removePlayer: (id: string) => void;
+  clearPlayers: () => void;
   setGameMode: (mode: GameMode) => void;
   setRoleSetup: (roles: PlayerRole[]) => void;
   startGame: () => void;
@@ -55,9 +56,35 @@ const defaultGameState: GameState = {
 
 export const GameContext = createContext<GameContextType | undefined>(undefined);
 
+// Changing the player count resets roles to the recommendation for the new count.
+const withPlayers = (prev: GameState, players: Player[]): GameState => ({
+  ...prev,
+  players: players.map(p => ({ ...p, role: null })),
+  roleSetup: getRecommendedRoles(players.length)
+});
+
+// Player names survive a reload (this browser only). Storage can be blocked: then the list just isn't kept.
+const PLAYERS_KEY = 'werewolf-players';
+const loadPlayers = (): Player[] => {
+  try {
+    const names: unknown = JSON.parse(localStorage.getItem(PLAYERS_KEY) ?? '[]');
+    if (!Array.isArray(names)) return [];
+    return names
+      .filter((n): n is string => typeof n === 'string' && n.trim() !== '')
+      .map(name => ({ id: uuidv4(), name, role: null, status: 'alive' }));
+  } catch {
+    return [];
+  }
+};
+
 export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [gameState, setGameState] = useState<GameState>(defaultGameState);
+  const [gameState, setGameState] = useState<GameState>(() => withPlayers(defaultGameState, loadPlayers()));
   const [timerSettings, setTimerSettings] = useState<TimerSettings>(DEFAULT_TIMER_SETTINGS);
+
+  const names = JSON.stringify(gameState.players.map(p => p.name));
+  useEffect(() => {
+    try { localStorage.setItem(PLAYERS_KEY, names); } catch { /* storage blocked */ }
+  }, [names]);
 
   useEffect(() => {
     let interval: number | undefined;
@@ -130,13 +157,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [gameState.players, gameState.gamePhase, gameState.pendingHunters]);
 
-  // Changing the player count resets roles to the recommendation for the new count.
-  const withPlayers = (prev: GameState, players: Player[]): GameState => ({
-    ...prev,
-    players: players.map(p => ({ ...p, role: null })),
-    roleSetup: getRecommendedRoles(players.length)
-  });
-
   const addPlayer = (name: string) => {
     const trimmed = name.trim();
     if (!trimmed) {
@@ -155,6 +175,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const removePlayer = (id: string) => {
     setGameState(prev => withPlayers(prev, prev.players.filter(p => p.id !== id)));
   };
+
+  const clearPlayers = () => setGameState(prev => withPlayers(prev, []));
 
   const setGameMode = (mode: GameMode) => {
     setGameState(prevState => ({
@@ -307,6 +329,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       timerSettings,
       addPlayer,
       removePlayer,
+      clearPlayers,
       setGameMode,
       setRoleSetup,
       startGame,

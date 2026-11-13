@@ -63,12 +63,19 @@ export function shuffle<T>(items: T[]): T[] {
   return a;
 }
 
-// Night steps for the living roles. Wolf cub wakes in the werewolf step; a doppelganger only until it has picked.
-export function getNightActionOrder(players: Player[], doppelgangers: Record<string, string> = {}): PlayerRole[] {
+// Night steps for every night role dealt this game, dead or alive, so the table can't tell which roles are gone.
+// fake = nobody can act (all holders dead, or the doppelganger already picked): call it anyway, then move on.
+// Wolf cub wakes in the werewolf step.
+export function getNightActionOrder(
+  players: Player[], doppelgangers: Record<string, string> = {},
+): { role: PlayerRole; fake: boolean }[] {
+  const step = (p: Player) => (isWolf(p.role) ? 'werewolf' : p.role);
+  const dealt = new Set(players.map(step));
+  if (Object.keys(doppelgangers).length) dealt.add('doppelganger'); // it may have turned into its pick's role
   const awake = new Set(players
-    .filter(p => p.status === 'alive' && p.role && !(p.role === 'doppelganger' && doppelgangers[p.id]))
-    .map(p => (isWolf(p.role) ? 'werewolf' : p.role)));
-  return NIGHT_ORDER.filter(r => awake.has(r));
+    .filter(p => p.status === 'alive' && !(p.role === 'doppelganger' && doppelgangers[p.id]))
+    .map(step));
+  return NIGHT_ORDER.filter(r => dealt.has(r)).map(role => ({ role, fake: !awake.has(role) }));
 }
 
 // Who a role may target tonight.
